@@ -5,6 +5,34 @@ import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
+### Used for Part 1:
+
+def recompute_grade(df, min_grade_value = 1, max_grade_value = 5):
+    '''
+    Recomputes the grades for the different attributes.
+    
+    Parameters :
+    - df: DataFrame containing user data.
+    - min_grade_value: minimal grade wanted.
+    - max_grade_value : maximal grade wanted.
+
+    Returns :
+    - DataFrame with grades on new scale. 
+    '''
+    attributes_of_interest = ['appearance', 'aroma', 'palate', 'taste', 'overall', 'rating']
+    dataset = ['rb','ad']
+
+    min_max_values = df[df['dataset'].isin(dataset)].groupby('dataset')[attributes_of_interest].agg(['min', 'max'])
+
+    for attribute in attributes_of_interest:
+        for name in dataset:
+            min_val = min_max_values.loc[name, (attribute, 'min')]
+            max_val = min_max_values.loc[name, (attribute, 'max')]
+            
+            df.loc[df['dataset'] == name, attribute] = ((df.loc[df['dataset'] == name, attribute] -min_val)/(max_val-min_val)*(max_grade_value - min_grade_value) + min_grade_value)
+
+    return df
+
 # Part 3.1
 
 def classify_user_rating_level(user_df, enthusiasts_level=20, connoisseur_level=100):
