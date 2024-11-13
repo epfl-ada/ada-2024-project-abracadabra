@@ -95,3 +95,5 @@ def PCA_plot(data):
     explained_variance = pca.explained_variance_ratio_
     print("principal components:",principal_components_loadings)
     print("Explained variance",explained_variance)
+
+    # checkou ttest
