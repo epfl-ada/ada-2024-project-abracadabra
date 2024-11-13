@@ -1,5 +1,9 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
+
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 # Part 3.1
 
@@ -52,4 +56,42 @@ def plot_category_distrib(df, category_column):
 
     plt.show()
 
-    
+def compute_variance_per_attribute(data):
+    attributes_of_interest = ['appearance', 'aroma', 'palate', 'taste', 'overall', 'rating']
+
+    for attribute in attributes_of_interest:
+
+        attribute_data = data.groupby("id_beer")[attribute].std()
+        attribute_data.name = 'var_'+attribute
+        data = data.merge(attribute_data, on='id_beer', how='left') #the sem needs at least 2 reviews otherwise it's a Nan
+
+    for attribute in attributes_of_interest:
+        data = data.dropna(subset='var_'+attribute)
+
+    return data
+
+def PCA_plot(data):
+
+    attributes_of_interest_PCA = ['var_appearance', 'var_aroma', 'var_palate', 'var_taste', 'var_overall', 'var_rating']
+
+    data_for_pca = data[attributes_of_interest_PCA]
+    scaler = StandardScaler()
+    data_scaled = scaler.fit_transform(data_for_pca)
+
+    pca = PCA(n_components=2)
+    principal_components = pca.fit_transform(data_scaled)
+
+    pca_df = pd.DataFrame(data=principal_components, columns=['PC1', 'PC2'])
+
+    plt.figure(figsize=(10, 6))
+    plt.scatter(pca_df['PC1'], pca_df['PC2'], alpha=0.7, edgecolors='k')
+    plt.xlabel('Principal Component 1')
+    plt.ylabel('Principal Component 2')
+    plt.title('PCA of Beers (2D) advocate with rating')
+    plt.grid(True)
+    plt.show()
+
+    principal_components_loadings = pca.components_
+    explained_variance = pca.explained_variance_ratio_
+    print("principal components:",principal_components_loadings)
+    print("Explained variance",explained_variance)
