@@ -84,19 +84,10 @@ def plot_category_distrib(df, category_column):
 
     plt.show()
 
-def compute_variance_per_attribute(data):
-    attributes_of_interest = ['appearance', 'aroma', 'palate', 'taste', 'overall', 'rating']
+def compute_variance_per_attribute(ratings_df, attributes_of_interest):
+    grouped_ratings = ratings_df.groupby('id_beer')
+    return grouped_ratings[attributes_of_interest].var()
 
-    for attribute in attributes_of_interest:
-
-        attribute_data = data.groupby("id_beer")[attribute].std()
-        attribute_data.name = 'var_'+attribute
-        data = data.merge(attribute_data, on='id_beer', how='left') #the sem needs at least 2 reviews otherwise it's a Nan
-
-    for attribute in attributes_of_interest:
-        data = data.dropna(subset='var_'+attribute)
-
-    return data
 
 def PCA_plot(data):
 
@@ -124,4 +115,114 @@ def PCA_plot(data):
     print("principal components:",principal_components_loadings)
     print("Explained variance",explained_variance)
 
-    # checkou ttest
+# Part 2
+def filter_ratings(ratings_df, threshold, attributes):
+    '''
+    Filter the beer with too few ratings or textual reviews.
+
+    Parameters :
+    - ratings_df: DataFrame containing ratings and textual reviews data
+    - threshold: Minimal number of specific attribute ratings required to select a beer for the analysis
+    - attributes: Attributes for which we want to have a minimal number of rating to select a beer for the analysis
+
+    Returns :
+    - DataFrame filtered. Only ratings for which the beer has enough number of ratings are remaining. Furthermore, the returned DataFrame
+    only contains the meaningful features/attributes and the beer id.
+    '''
+
+    # Keeping only the relevant column/features : attributes and id_beer
+    columns_to_keep = attributes + ['id_beer']
+    df_filtered = ratings_df[columns_to_keep]
+
+    # Dropping the rows with nan values
+    df_filtered = df_filtered.dropna(subset=attributes, how='any')
+    print("Pourcentage of ratings remaining after dropping rows with nan values in selected attributes: {:.2f} %".format(100 * len(df_filtered)/len(ratings_df)))
+
+    # Group the beer per id and compute the size of each group (number of filtered ratings for each beer)
+    valid_ratings_count = df_filtered.groupby('id_beer').size()
+
+    # Keep all ratings for which the beer has enough filtered ratings
+    beer_remaining = valid_ratings_count[valid_ratings_count >= threshold]
+    df_filtered = df_filtered[df_filtered['id_beer'].isin(beer_remaining.index)]
+    print("Pourcentage of ratings remaining after dropping rating for which beer has too few valid ratings : {:.2f} %".format(100 * len(df_filtered)/len(ratings_df))) 
+
+    return df_filtered
+
+# Part 2
+def classify_value_threshold(df, attributes_interest, attribute_labelling = ['overall'], threshold_controversial = 0.5, threshold_universal = 0.1):
+    '''
+    This function studies the variance in some attributes according to the label provided to the beers. Beers are labelled
+    as controversial/universal according to the value of the variance of a certain attribute.
+
+    Parameters :
+    - df: DataFrame containing ratings data
+    - attributes_interest: Attributes the function study the variance on
+    - attribute_labelling: Attribute for which the variance define the label of the beer
+    - threshold_controversial: Threshold for which a higher variance value labels the beer as controversial
+    - threshold_universal: Threshold for which a lower variance value labels the beer as universal
+
+    Returns :
+    - The variance of the attributes of interest for both class of beers, controversial and universal 
+    '''
+    # Compute the variance of the attribute for labelling for each beer
+    attribute_variance = compute_variance_per_attribute(df, attribute_labelling)
+
+    # Extract beer id with controversial / universal overall variance
+    controv_rating_id = attribute_variance[attribute_variance.values >= threshold_controversial]
+    univ_rating_id = attribute_variance[attribute_variance.values < threshold_universal]
+
+    # Print the distribution of class
+    print("Percentage of beers with controversial overall variance : {:.2f} %".format(100 * len(controv_rating_id) / len(attribute_variance)))
+    print("Percentage of beers with universal overall variance : {:.2f} %".format(100 * len(univ_rating_id) / len(attribute_variance)))
+
+    # Filter the ratings for which the beers are defined as controversial or universal
+    controv_rating = df[df['id_beer'].isin(controv_rating_id.index)]
+    univ_rating = df[df['id_beer'].isin(univ_rating_id.index)]
+
+    # Compute the variance across the attributes of interest on the different class for each beers
+    controv_rating_variance_attribute = compute_variance_per_attribute(controv_rating, attributes_interest)
+    univ_rating_variance_attribute = compute_variance_per_attribute(univ_rating, attributes_interest)
+
+    return [controv_rating_variance_attribute, univ_rating_variance_attribute]
+
+def classify_percentage_distribution(df, attributes_interest, attribute_labelling = ['overall'], threshold_percentage=10):
+    '''
+    This function does the same as classify_value_threshold(), but instead of keeping values below
+    or above a certain threshold, it picks a certain low and high percentage of the distribution.
+    This function studies the variance in some attributes according to the label provided to the beers. Beers are labelled
+    as controversial/universal according to the distribution of their variance and are selected if in highest
+    or lowest part of the distribution
+
+    Parameters :
+    - df: DataFrame containing ratings data
+    - attributes_interest: Attributes the function study the variance on
+    - attribute_labelling: Attribute for which the variance define the label of the beer
+    - threshold_percentage: Value selecting the top and bottom x percentage of values in the distribution
+
+    Returns :
+    - The variance of the attributes of interest for both class of beers, controversial and universal 
+    '''
+    # Compute the variance of the attribute for labelling for each beer
+    attribute_variance = compute_variance_per_attribute(df, attribute_labelling)
+
+    # Computing the top and bottom value threshold for quantile x% and 1-x%
+    top_threshold = attribute_variance.values.quantile(1-threshold_percentage/100)
+    bottom_threshold = attribute_variance.values.quantile(threshold_percentage/100)
+
+    # Extract beer id with controversial / universal overall variance
+    controv_rating_id = attribute_variance[attribute_variance.values >= top_threshold]
+    univ_rating_id = attribute_variance[attribute_variance.values <= bottom_threshold]
+
+    # Asserting the distribution of the classes
+    print("Percentage of beers with controversial overall variance : {:.2f} %".format(100 * len(controv_rating_id) / len(attribute_variance)))
+    print("Percentage of beers with universal overall variance : {:.2f} %".format(100 * len(univ_rating_id) / len(attribute_variance)))
+
+    # Filter the ratings for which the beers are defined as controversial or universal
+    controv_rating = df[df['id_beer'].isin(controv_rating_id.index)]
+    univ_rating = df[df['id_beer'].isin(univ_rating_id.index)]
+
+    # Compute the variance across the attributes of interest on the different class for each beers
+    controv_rating_variance_attribute = compute_variance_per_attribute(controv_rating, attributes_interest)
+    univ_rating_variance_attribute = compute_variance_per_attribute(univ_rating, attributes_interest)
+
+    return [controv_rating_variance_attribute, univ_rating_variance_attribute]
