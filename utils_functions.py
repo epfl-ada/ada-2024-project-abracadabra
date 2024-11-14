@@ -244,4 +244,4 @@ def compute_similarity_scores(df):
     df['exact_similarity_score'] = df[exact_similarity_columns].sum(axis=1)
     df['plus_minus_1_similarity_score'] = df[plus_minus_1_similarity_columns].sum(axis=1)
 
-    return df
+    return df, exact_similarity_columns, plus_minus_1_similarity_columns
