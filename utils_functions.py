@@ -239,12 +239,15 @@ def classify_percentage_distribution(df, attributes_interest, attribute_labellin
     attribute_variance = compute_variance_per_attribute(df, attribute_labelling)
 
     # Computing the top and bottom value threshold for quantile x% and 1-x%
-    top_threshold = attribute_variance.values.quantile(1 - threshold_percentage / 100)
-    bottom_threshold = attribute_variance.values.quantile(threshold_percentage / 100)
+    # Need attribute_labelling[0] as the parameter is entered in the syntax ['attribute_name'] and attribute_variance output a DataFrame
+    # --> attribute_variance[attribute_labelling[0]] corresponds to attribute_variance['attribute_name']
+    # This could be done differently but this is chosen for consistent syntax in the different functions
+    top_threshold = attribute_variance[attribute_labelling[0]].quantile(1-threshold_percentage/100)
+    bottom_threshold = attribute_variance[attribute_labelling[0]].quantile(threshold_percentage/100)
 
     # Extract beer id with controversial / universal overall variance
-    controv_rating_id = attribute_variance[attribute_variance.values >= top_threshold]
-    univ_rating_id = attribute_variance[attribute_variance.values <= bottom_threshold]
+    controv_rating_id = attribute_variance[attribute_variance[attribute_labelling[0]] >= top_threshold]
+    univ_rating_id = attribute_variance[attribute_variance[attribute_labelling[0]] <= bottom_threshold]
 
     # Asserting the distribution of the classes
     print("Percentage of beers with controversial overall variance : {:.2f} %".format(
