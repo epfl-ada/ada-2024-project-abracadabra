@@ -4,6 +4,7 @@ import pandas as pd
 
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from itertools import combinations
 
 ### Used for Part 1:
 
@@ -226,3 +227,21 @@ def classify_percentage_distribution(df, attributes_interest, attribute_labellin
     univ_rating_variance_attribute = compute_variance_per_attribute(univ_rating, attributes_interest)
 
     return [controv_rating_variance_attribute, univ_rating_variance_attribute]
+
+def compute_similarity_scores(df):
+    sentiment_columns = ['class_sentiment_bert', 'class_sentiment_google', 'class_sentiment_distilbert',
+                         'class_sentiment_GPT']
+
+    for col1, col2 in combinations(sentiment_columns, 2):
+        df[f'exact_similarity_{col1}_{col2}'] = (df[col1] == df[col2]).astype(int)
+
+        df[f'plus_minus_1_similarity_{col1}_{col2}'] = (abs(df[col1] - df[col2]) <= 1).astype(int)
+
+    exact_similarity_columns = [f'exact_similarity_{col1}_{col2}' for col1, col2 in combinations(sentiment_columns, 2)]
+    plus_minus_1_similarity_columns = [f'plus_minus_1_similarity_{col1}_{col2}' for col1, col2 in
+                                       combinations(sentiment_columns, 2)]
+
+    df['exact_similarity_score'] = df[exact_similarity_columns].sum(axis=1)
+    df['plus_minus_1_similarity_score'] = df[plus_minus_1_similarity_columns].sum(axis=1)
+
+    return df
