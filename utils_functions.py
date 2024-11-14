@@ -11,7 +11,7 @@ from itertools import combinations
 
 ### Used for Part 1:
 
-def recompute_grade(df, min_grade_value = 1, max_grade_value = 5):
+def recompute_grade(df, min_grade_value=1, max_grade_value=5):
     '''
     Recomputes the grades for the different attributes.
     
@@ -34,8 +34,8 @@ def recompute_grade(df, min_grade_value = 1, max_grade_value = 5):
             max_val = min_max_values.loc[name, (attribute, 'max')]
 
             df.loc[df['dataset'] == name, attribute] = (
-                        (df.loc[df['dataset'] == name, attribute] - min_val) / (max_val - min_val) * (
-                            max_grade_value - min_grade_value) + min_grade_value)
+                    (df.loc[df['dataset'] == name, attribute] - min_val) / (max_val - min_val) * (
+                    max_grade_value - min_grade_value) + min_grade_value)
 
     return df
 
@@ -98,7 +98,7 @@ def compute_variance_per_attribute(ratings_df, attributes_of_interest):
     return grouped_ratings[attributes_of_interest].var()
 
 
-def PCA_plot(data, attributes_of_interest_PCA= ['appearance', 'aroma', 'palate', 'taste','overall','rating']):
+def PCA_plot(data, attributes_of_interest_PCA=['appearance', 'aroma', 'palate', 'taste', 'overall', 'rating']):
     '''
     Plots the PCA on the variance of the attributes of the beers, we reduce the dimensions on 2D.
     Also prints the aigenvalues and eigenvector.
@@ -266,7 +266,7 @@ def classify_percentage_distribution(df, attributes_interest, attribute_labellin
     return [controv_rating_variance_attribute, univ_rating_variance_attribute]
 
 
-def t_test_statistic(df, attributes_of_interest = ['appearance', 'aroma', 'palate', 'taste','overall','rating']):
+def t_test_statistic(df, attributes_of_interest=['appearance', 'aroma', 'palate', 'taste', 'overall', 'rating']):
     '''
     This function performs a t test. We want to test the mean of the variance of the different attributes.
     The H0 hypothesis is that the true mean of the variance of a given attribute between the different bears are equal.
@@ -277,33 +277,32 @@ def t_test_statistic(df, attributes_of_interest = ['appearance', 'aroma', 'palat
     - df: DataFrame containing the variance data
     - attributes_interest: Attributes we chose to analyse the variance from
     '''
-    p_value_table = np.zeros((len(attributes_of_interest),len(attributes_of_interest)))
-    ci_table = np.zeros((len(attributes_of_interest),len(attributes_of_interest),2))
-    mean_value_mean = np.zeros((len(attributes_of_interest),len(attributes_of_interest)))
+    p_value_table = np.zeros((len(attributes_of_interest), len(attributes_of_interest)))
+    ci_table = np.zeros((len(attributes_of_interest), len(attributes_of_interest), 2))
+    mean_value_mean = np.zeros((len(attributes_of_interest), len(attributes_of_interest)))
     annotations = np.empty(p_value_table.shape, dtype=object)
 
-    for i,attribute1 in enumerate(attributes_of_interest):
+    for i, attribute1 in enumerate(attributes_of_interest):
         for j, attribute2 in enumerate(attributes_of_interest):
             attribute1_variance = df[attribute1]
             attribute2_variance = df[attribute2]
 
             ttest_result = ttest_ind(attribute1_variance, attribute2_variance)
             ci_t_test_result = ttest_result.confidence_interval(confidence_level=0.95)
-            p_value_table[i,j] = ttest_result.pvalue
-            ci_table[i,j,0] = ci_t_test_result.low
-            ci_table[i,j,1] = ci_t_test_result.high
-            mean_value_mean[i,j] = attribute2_variance.mean()
-            annotations[i, j] = f"({mean_value_mean[i, j]:.2f} ± {ci_table[i,j,0]:.2f}, {ci_table[i,j,1]:.2f})"
+            p_value_table[i, j] = ttest_result.pvalue
+            ci_table[i, j, 0] = ci_t_test_result.low
+            ci_table[i, j, 1] = ci_t_test_result.high
+            mean_value_mean[i, j] = attribute2_variance.mean()
+            annotations[i, j] = f"({mean_value_mean[i, j]:.2f} ± {ci_table[i, j, 0]:.2f}, {ci_table[i, j, 1]:.2f})"
 
-    attributes_used = ['Appearance','Aroma','Palate','Taste','Overall','Ratings']
+    attributes_used = ['Appearance', 'Aroma', 'Palate', 'Taste', 'Overall', 'Ratings']
     p_value_df = pd.DataFrame(p_value_table, index=attributes_used, columns=attributes_used)
 
     plt.figure(figsize=(8, 6))
-    sns.heatmap(p_value_df, annot=True, cmap="Reds", vmin=0, vmax=1,square=True, cbar_kws={'label': 'P-Value'})
+    sns.heatmap(p_value_df, annot=True, cmap="Reds", vmin=0, vmax=1, square=True, cbar_kws={'label': 'P-Value'})
 
     plt.title("P-Value Heatmap for the T Test on the variance of the different attributes")
     plt.show()
-
 
 
 def compute_similarity_scores(df):
@@ -342,3 +341,38 @@ def compute_similarity_scores(df):
     df['plus_minus_1_similarity_score'] = df[plus_minus_1_similarity_columns].sum(axis=1)
 
     return df, exact_similarity_columns, plus_minus_1_similarity_columns
+
+
+def plot_sentiment_similarities(df, exact_similarity_columns, plus_minus_1_similarity_columns):
+    """
+        Plots the similarity scores between pairs of sentiment analysis models.
+
+        Parameters:
+            -df : DataFrame containing similarity data between model pairs
+            -exact_similarity_columns : A list of the column names in `df` representing exact similarity scores between pairs of models.
+            -plus_minus_1_similarity_columns : A list of the column names in `df` representing ±1 similarity scores between pairs of models.
+    """
+
+    plt.figure(figsize=(10, 6))
+    ax1 = df[exact_similarity_columns].sum().plot(kind='bar', color='skyblue')
+    plt.title('Exact Similarity Scores Between Pairs of Models')
+    plt.ylabel('Number of Matches')
+    plt.xlabel('Model Pair')
+    plt.xticks(rotation=45)
+
+    for i, value in enumerate(df[exact_similarity_columns].sum()):
+        ax1.text(i, value + 0.5, str(round(value / 6000, 2)), ha='center', va='bottom')
+
+    plt.show()
+
+    plt.figure(figsize=(10, 6))
+    ax2 = df[plus_minus_1_similarity_columns].sum().plot(kind='bar', color='lightcoral')
+    plt.title('±1 Similarity Scores Between Pairs of Models')
+    plt.ylabel('Number of Matches')
+    plt.xlabel('Model Pair')
+    plt.xticks(rotation=45)
+
+    for i, value in enumerate(df[plus_minus_1_similarity_columns].sum()):
+        ax2.text(i, value + 0.5, str(round(value / 6000, 2)), ha='center', va='bottom')
+
+    plt.show()
