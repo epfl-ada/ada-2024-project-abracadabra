@@ -65,7 +65,7 @@ def classify_user_rating_level(user_df, enthusiasts_level=20, connoisseur_level=
             return 'connoisseur'
 
     # Apply classification to each user (each row of the DataFrame) based on their number of ratings
-    user_df['rating_user_level'] = user_df['nbr_ratings'].apply(__classify)
+    user_df['rating_user_level'] = user_df['nbr_ratings_total'].apply(__classify)
 
     return user_df
 
