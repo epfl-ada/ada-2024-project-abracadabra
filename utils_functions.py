@@ -290,8 +290,7 @@ def t_test_statistic(df, attributes_of_interest=['appearance', 'aroma', 'palate'
             mean_value_mean[i, j] = attribute2_variance.mean()
             annotations[i, j] = f"({mean_value_mean[i, j]:.2f} ± {ci_table[i, j, 0]:.2f}, {ci_table[i, j, 1]:.2f})"
 
-    attributes_used = ['Appearance', 'Aroma', 'Palate', 'Taste', 'Overall', 'Ratings']
-    p_value_df = pd.DataFrame(p_value_table, index=attributes_used, columns=attributes_used)
+    p_value_df = pd.DataFrame(p_value_table, index=attributes_of_interest, columns=attributes_of_interest)
 
     plt.figure(figsize=(8, 6))
     sns.heatmap(p_value_df, annot=True, cmap="Reds", vmin=0, vmax=1, square=True, cbar_kws={'label': 'P-Value'})
@@ -458,12 +457,13 @@ def plot_var_boxplot(controv_df, univ_df):
     plt.title("Distribution of variance across attributes for beers with high variance of overall score (labelled controversial)")
     plt.xlabel("attributes")
     plt.ylabel("Variance")
+    plt.yticks([0, 0.5, 1, 1.5, 2, 2.5, 3])
 
     plt.subplot(2, 1, 1)
     sns.boxplot(univ_df)
     plt.title("Distribution of variance across attributes for beers with low variance of overall score (labelled universal)")
     plt.xlabel("Attriubtes")
     plt.ylabel("Variance")
-
+    plt.yticks([0, 0.5, 1, 1.5, 2, 2.5, 3])
     plt.tight_layout()
     plt.show()
