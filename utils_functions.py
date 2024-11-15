@@ -93,11 +93,6 @@ def plot_category_distrib(df, category_column):
     plt.show()
 
 
-def compute_variance_per_attribute(ratings_df, attributes_of_interest):
-    grouped_ratings = ratings_df.groupby('id_beer')
-    return grouped_ratings[attributes_of_interest].var()
-
-
 def PCA_plot(data, attributes_of_interest_PCA=['appearance', 'aroma', 'palate', 'taste', 'overall', 'rating']):
     '''
     Plots the PCA on the variance of the attributes of the beers, we reduce the dimensions on 2D.
@@ -178,7 +173,7 @@ def filter_ratings(ratings_df, threshold, attributes):
 
 
 # Part 2
-def classify_value_threshold(df, attributes_interest, attribute_labelling=['overall'], threshold_controversial=0.5,
+def classify_value_threshold(df, attributes_interest, attribute_labelling=['overall'], threshold_controversial=1,
                              threshold_universal=0.1):
     '''
     This function studies the variance in some attributes according to the label provided to the beers. Beers are labelled
@@ -186,8 +181,8 @@ def classify_value_threshold(df, attributes_interest, attribute_labelling=['over
 
     Parameters :
     - df: DataFrame containing ratings data
-    - attributes_interest: Attributes the function study the variance on
-    - attribute_labelling: Attribute for which the variance define the label of the beer
+    - attributes_interest: Attributes the function computes the variance on
+    - attribute_labelling: Attribute for which the variance defines the label of the beer
     - threshold_controversial: Threshold for which a higher variance value labels the beer as controversial
     - threshold_universal: Threshold for which a lower variance value labels the beer as universal
 
@@ -375,4 +370,100 @@ def plot_sentiment_similarities(df, exact_similarity_columns, plus_minus_1_simil
     for i, value in enumerate(df[plus_minus_1_similarity_columns].sum()):
         ax2.text(i, value + 0.5, str(round(value / 6000, 2)), ha='center', va='bottom')
 
+    plt.show()
+
+
+def max_min_variance_count(df):
+    """
+    Find the attributes with maximal and minimal variance attribute across all beers
+
+    Parameters:
+    - df : DataFrame containing the variance of the attributes
+
+    Returns :
+    - Two Series containing the name of the attributes with maximal and minimal variance for each beer
+    """
+    # Get the name of the column having the maximal/minimal variance for each row
+    max_var_attribute = df.idxmax(axis = 1)
+    min_var_attribute = df.idxmin(axis = 1)
+
+    # Print the distribution of attributes having max and min variance per beer
+    print("Maximal variance attribute count :", max_var_attribute.value_counts())
+    print("Minimal variance attriubte count : ", min_var_attribute.value_counts())
+
+    return [max_var_attribute, min_var_attribute]
+
+def plot_count_max_min_variance_count(max_var_count, min_var_count, classification='all'):
+    plt.subplot(2, 1, 1)
+    plt.hist(max_var_count)
+    plt.title(f"Distribution of maximal variance attribute across {classification} beers")
+    plt.xlabel("Attributes")
+    plt.ylabel("Max variance count")
+
+    plt.subplot(2, 1, 2)
+    plt.hist(min_var_count)
+    plt.title(f"Distribution of minimal variance attribute across {classification} beers")
+    plt.xlabel("Attributes")
+    plt.ylabel("Min variance count")
+
+    plt.tight_layout()
+    plt.show()
+
+def compute_correlation(df_variances, attribute_corr):
+    correlations = df_variances.corr()[attribute_corr[0]]
+    return correlations.drop(attribute_corr)
+
+def plot_correlation(correlations):
+    # Plot the correlation
+    plt.figure(figsize=(8, 6))
+    correlations.plot(kind='bar', color=['blue' if c > 0 else 'red' for c in correlations])
+    plt.title("Correlation of attributes variances with Overall Variance")
+    plt.xlabel('Attributes')
+    plt.ylabel('Correlation')
+    plt.axhline(0, color='black', linewidth=0.5)
+    plt.show()
+
+def compute_variance_per_attribute(ratings_df, attributes_of_interest):
+    '''
+    Computes the variance of desired attributes for each beer
+
+    Parameters :
+    - ratings_df: DataFrame containing the ratings
+    - attributes_of_interest: Attributes the function computes the variance on
+
+    Returns :
+    - A DataFrame with the variance of the attributes of interest for each beer
+    '''
+    grouped_ratings = ratings_df.groupby('id_beer')
+    return grouped_ratings[attributes_of_interest].var()
+
+
+def plot_var_distrib_violin(var_df):
+    sns.violinplot(var_df)
+    plt.title("Comparison of variance distribution across attributes")
+    plt.xlabel("Attributes")
+    plt.ylabel("Variance")
+    plt.show()
+
+def plot_overall_hist_distrib(var_df):
+    plt.hist(var_df, bins = 40)
+    plt.title("Distribution of overall variance across all beers")
+    plt.xlabel("Variance")
+    plt.ylabel("Count")
+    plt.show()
+
+def plot_var_boxplot(controv_df, univ_df):
+    plt.subplot(2, 1, 2)
+    sns.boxplot(controv_df)
+    plt.title("Distribution of variance across attributes for beers with high variance of overall score (labelled controversial)")
+    plt.xlabel("attributes")
+    plt.ylabel("Variance")
+
+    plt.subplot(2, 1, 1)
+    sns.boxplot(univ_df)
+    plt.title("Distribution of variance across attributes for beers with low variance of overall score (labelled universal)")
+    plt.xlabel("Attriubtes")
+    plt.ylabel("Variance")
+
+    plt.tight_layout()
     plt.show()
