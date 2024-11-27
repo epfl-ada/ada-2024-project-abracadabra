@@ -436,6 +436,39 @@ def compute_variance_per_attribute(ratings_df, attributes_of_interest):
     grouped_ratings = ratings_df.groupby('id_beer')
     return grouped_ratings[attributes_of_interest].var()
 
+def compute_stastics(ratings_df, attributes = ['aroma','palate','taste','overall','rating'], source = ['ad','rb']):
+    stats = {}
+    for dataset in source:
+        stats[dataset] = {}
+        new_ratings = ratings_df[ratings_df['dataset']==dataset]
+        for attrib in attributes:
+            data = new_ratings[attrib].dropna()
+            resolution = np.diff(np.sort(data.unique())).min()
+            stats[dataset][attrib] = {'min': data.min(), 'max': data.max(), 'median': data.median(), 'resolution': resolution}
+
+    print(stats)
+
+def plot_var_distrib_violin_grades(ratings_df):
+    ratings_advocate = ratings_df[ratings_df['dataset']=='ad']
+    ratings_ratebeer = ratings_df[ratings_df['dataset']=='rb']
+
+    ratings_advocate = ratings_advocate[['aroma','palate','taste','overall','rating']]
+    ratings_ratebeer = ratings_ratebeer[['aroma','palate','taste','overall','rating']]
+
+    sns.violinplot(ratings_ratebeer)
+    plt.title("Distribution of grades across various attributes on the ratebeer dataset")
+    plt.xlabel("Attributes")
+    plt.ylabel("Grade")
+    plt.show()
+
+    sns.violinplot(ratings_advocate)
+    plt.title("Distribution of grades across various attributes on the advocate dataset")
+    plt.xlabel("Attributes")
+    plt.ylabel("Grade")
+    plt.show()
+
+    del ratings_advocate
+    del ratings_ratebeer
 
 def plot_var_distrib_violin(var_df):
     sns.violinplot(var_df)
