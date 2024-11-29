@@ -135,6 +135,67 @@ def PCA_plot(data, attributes_of_interest_PCA=['appearance', 'aroma', 'palate', 
 
 
 # Part 2
+def filter_ratings_new(ratings_df, beers_df, breweries_df, threshold, attributes):
+    '''
+    Filter the beer with too few ratings or textual reviews.
+
+    Parameters :
+    - ratings_df: DataFrame containing ratings and textual reviews data
+    - beers_df: DataFrame containing beers data
+    - breweries_df: DataFrame containing breweries data
+    - threshold: Minimal number of specific attribute ratings required to select a beer for the analysis
+    - attributes: Attributes for which we want to have a minimal number of rating to select a beer for the analysis
+
+    Returns :
+    - DataFrame filtered. Only ratings for which the beer has enough number of ratings are remaining. Furthermore, the returned DataFrame
+    only contains the meaningful features/attributes and the beer id.
+    - df_breweries_filtered: DataFrame containing only the breweries remaining after filetering
+    - beers_df: DataFrame containing only the beers remaining after filetering
+    '''
+
+    # Keeping only the relevant column/features : attributes and id_beer
+    columns_to_keep = attributes + ['id_beer']
+    df_filtered = ratings_df[columns_to_keep]
+
+    # Dropping the rows with nan values
+    df_filtered = df_filtered.dropna(subset=attributes, how='any')
+    print(
+        "Pourcentage of ratings remaining after dropping rows with nan values in selected attributes: {:.2f} %".format(
+            100 * len(df_filtered) / len(ratings_df)))
+
+    # Group the beer per id and compute the size of each group (number of filtered ratings for each beer)
+    valid_ratings_count = df_filtered.groupby('id_beer').size()
+
+    # Keep all ratings for which the beer has enough filtered ratings
+    beer_remaining = valid_ratings_count[valid_ratings_count >= threshold]
+    df_filtered = df_filtered[df_filtered['id_beer'].isin(beer_remaining.index)]
+    print(
+        "Pourcentage of ratings remaining after dropping rating for which beer has too few valid ratings : {:.2f} %".format(
+            100 * len(df_filtered) / len(ratings_df)))
+
+    init_length = len(beers_df)
+    beers_df = beers_df.copy()
+    beers_df = beers_df[beers_df['id'].isin(beer_remaining.index)]
+    beers_df.loc[:, 'true_number_ratings'] = beers_df['id'].map(beer_remaining)
+    #beers_df['true_number_ratings'] = beers_df['id'].map(beer_remaining)
+    print(
+        "Pourcentage of beers remaining after dropping rating for which a beer has too few valid ratings : {:.2f} %".format(
+            100 * len(beers_df) / init_length))
+    beers_df = beers_df.drop(columns='nbr_ratings').rename(columns={'true_number_ratings':'nbr_ratings'})
+
+    valid_beers_count = beers_df.groupby('brewery_id').size()
+    init_length = len(breweries_df)
+    breweries_df = breweries_df.copy()
+    breweries_df = breweries_df[breweries_df.id.isin(valid_beers_count.index)]
+    breweries_df.loc[:, 'true_number_beers'] = breweries_df['id'].map(valid_beers_count)
+    #breweries_df['true_number_beers'] = breweries_df['id'].map(valid_beers_count)
+
+    print(
+        "Pourcentage of breweries remaining after dropping rating for which a beer has too few valid ratings : {:.2f} %".format(
+            100 * len(breweries_df) / init_length))
+    breweries_df = breweries_df.drop(columns='nbr_beers').rename(columns={'true_number_beers':'nbr_beers'})
+    return df_filtered, breweries_df, beers_df
+
 def filter_ratings(ratings_df, threshold, attributes):
     '''
     Filter the beer with too few ratings or textual reviews.
