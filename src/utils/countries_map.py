@@ -55,10 +55,26 @@ def match_countries(breweries_df):
     countries = ["United States", "Canada", "United Kingdom", "Australia", "Germany", "Italy"]
 
     breweries_df['location'] = breweries_df['location'].apply(lambda x: 'United States of America' if 'United States' in x else x)
+    breweries_df['location'] = breweries_df['location'].apply(lambda x: 'United States of America' if 'Utah' in x else x)
+
     breweries_df['location'] = breweries_df['location'].apply(lambda x: 'United Kingdom' if 'United Kingdom' in x else x)
     breweries_df['location'] = breweries_df['location'].apply(lambda x: 'United Kingdom' if 'Wales' in x else x)
     breweries_df['location'] = breweries_df['location'].apply(lambda x: 'United Kingdom' if 'England' in x else x)
     breweries_df['location'] = breweries_df['location'].apply(lambda x: 'United Kingdom' if 'Scotland' in x else x)
+    breweries_df['location'] = breweries_df['location'].apply(lambda x: 'United Kingdom' if 'Gibraltar' in x else x)
+
     breweries_df['location'] = breweries_df['location'].apply(lambda x: 'Canada' if 'Canada' in x else x)
+
+    breweries_df['location'] = breweries_df['location'].apply(lambda x: 'Czechia' if 'Czech Republic' in x else x)
+    breweries_df['location'] = breweries_df['location'].apply(lambda x: 'Bosnia and Herz.' if 'Bosnia and Herzegovina' in x else x)
+    breweries_df['location'] = breweries_df['location'].apply(lambda x: 'S. Sudan' if 'South Sudan' in x else x)
+    breweries_df['location'] = breweries_df['location'].apply(lambda x: 'China' if 'Tibet' in x else x)
+    breweries_df['location'] = breweries_df['location'].apply(lambda x: 'Slovakia' if 'Slovak Republic' in x else x)
+
+    
+
+
+
+    
 
     return breweries_df
