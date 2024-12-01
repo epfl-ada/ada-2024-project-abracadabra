@@ -7,6 +7,24 @@ import os
 
 from src.utils.countries_map import match_countries, draw_map
 
+def plot_distribution_number_ratings_per_country_of_origin_of_user(users_df, ratings_df):
+    users_df = correct_number_ratings_per_user(users_df,ratings_df)
+    users_df = match_countries(users_df)
+    users_df = users_df.groupby('location')['nbr_ratings_total'].sum()
+
+    users_df = users_df.sort_values(ascending=False)#use.head(100) if want 100 first coountires
+
+    # Create the bar plot
+    plt.figure(figsize=(16, 12))
+    users_df.plot(kind='bar', color='skyblue', edgecolor='black', width=0.8)
+    plt.yscale('log')
+    plt.title('Top 100 Countries by Total Ratings', fontsize=16)
+    plt.xlabel('Country')
+    plt.ylabel('Total Ratings')
+    plt.xticks(rotation=45, ha='right', fontsize=10)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.show()
 
 def plot_origin_users(beers_df,users_df, ratings_df, labels, label_to_match = 0):
     
