@@ -135,7 +135,7 @@ def PCA_plot(data, attributes_of_interest_PCA=['appearance', 'aroma', 'palate', 
 
 
 # Part 2
-def filter_ratings_new(ratings_df, beers_df, breweries_df, threshold, attributes):
+def filter_ratings_new(ratings_df, beers_df, breweries_df, users_df, threshold, attributes):
     '''
     Filter the beer with too few ratings or textual reviews.
 
@@ -154,7 +154,7 @@ def filter_ratings_new(ratings_df, beers_df, breweries_df, threshold, attributes
     '''
 
     # Keeping only the relevant column/features : attributes and id_beer
-    columns_to_keep = attributes + ['id_beer']
+    columns_to_keep = attributes + ['id_beer'] + ['id_user'] + ['id_brewery']
     df_filtered = ratings_df[columns_to_keep]
 
     # Dropping the rows with nan values
@@ -194,7 +194,15 @@ def filter_ratings_new(ratings_df, beers_df, breweries_df, threshold, attributes
         "Pourcentage of breweries remaining after dropping rating for which a beer has too few valid ratings : {:.2f} %".format(
             100 * len(breweries_df) / init_length))
     breweries_df = breweries_df.drop(columns='nbr_beers').rename(columns={'true_number_beers':'nbr_beers'})
-    return df_filtered, breweries_df, beers_df
+
+    #Keep the users we want:
+    init_length = len(users_df)
+    users_df = users_df.copy()
+    users_df = users_df[users_df.id.isin(df_filtered.id_user)]
+    print(
+        "Pourcentage of users remaining after dropping rating for which a beer has too few valid ratings : {:.2f} %".format(
+            100 * len(users_df) / init_length))
+    return df_filtered, breweries_df, beers_df, users_df
 
 def filter_ratings(ratings_df, threshold, attributes):
     '''
