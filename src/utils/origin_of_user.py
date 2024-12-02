@@ -1,9 +1,5 @@
 import pandas as pd
-import plotly.express as px
-import geopandas as gpd
-import pandas as pd
 import matplotlib.pyplot as plt
-import os
 
 from src.utils.countries_map import match_countries, draw_map
 
