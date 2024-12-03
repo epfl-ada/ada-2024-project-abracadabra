@@ -569,3 +569,17 @@ def plot_var_boxplot(controv_df, univ_df):
     plt.yticks([0, 0.5, 1, 1.5, 2, 2.5, 3])
     plt.tight_layout()
     plt.show()
+
+def plot_histogram_nbr_ratings_total(users_df):
+    #Uses the code of the Exercise 2: Becoming a DataVizard solution.ipynb
+    array_1000 = plt.hist(users_df.nbr_ratings_total,bins=10000,log=True,histtype='step')
+    plt.close()
+
+    plt.loglog(array_1000[1][1:],array_1000[0])
+    plt.title('Distribution of Total Number of Ratings', fontsize=16)
+    plt.xlabel('Number of Ratings in logscale', fontsize=14)
+    plt.ylabel('Frequency in logscale', fontsize=14)
+
+    plt.show()
+
+    print(users_df.nbr_ratings_total.describe())
