@@ -53,9 +53,6 @@ def plot_origin_mean_users(beers_df,users_df, ratings_df, labels, label_to_match
     users_nbr_labeled_ratings = match_countries(users_nbr_labeled_ratings)
     users_nbr_labeled_ratings['frequency'] = users_nbr_labeled_ratings.nbr_ratings_labelled_matched/users_nbr_labeled_ratings.nbr_ratings_total
     users_nbr_labeled_ratings = users_nbr_labeled_ratings.groupby('location').agg({'nbr_ratings_total': 'mean','frequency': 'mean'}).reset_index()
-    print("HEY")
-    print(users_nbr_labeled_ratings.head())
-
     draw_map(users_nbr_labeled_ratings[['location','frequency']],'Frequency of the mean of labeled reviews for the origin of the reviewer')
 
     return users_df

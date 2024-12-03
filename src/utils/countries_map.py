@@ -29,16 +29,19 @@ def compute_number_beers_per_country(breweries_df, beers, label_to_match):
     breweries_df['frequency'] = breweries_df.amount_of_labels/breweries_df.nbr_beers
     return breweries_df
 
-def draw_map(countries_Beers_labelled,title):
+def draw_map(countries_Beers_labelled,title, column_for_plot = 'frequency', min = 0):
     current_directory = os.getcwd()
     shapefile_path = current_directory+ "/src/utils/data/ne_110m_admin_0_countries.shp"
 
     world = gpd.read_file(shapefile_path)
     world = world.merge(countries_Beers_labelled, how='left', left_on='NAME', right_on='location')
-    world['frequency'] = world['frequency'].fillna(0)
+    world[column_for_plot] = world[column_for_plot].fillna(0)
 
     fig, ax = plt.subplots(1, 1, figsize=(15, 10))
-    world.plot(column='frequency', cmap='OrRd', legend=True,legend_kwds={'label': "Number of Beers per Country"},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax)
+    if min ==0:
+        world.plot(column=column_for_plot, cmap='OrRd', legend=True,legend_kwds={'label': "Number of Beers per Country"},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax)
+    if min == -1:
+        world.plot(column=column_for_plot, cmap='seismic', legend=True,legend_kwds={'label': "Number of Beers per Country"},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax)
     ax.set_title(title, fontsize=16)
     plt.show()
 
