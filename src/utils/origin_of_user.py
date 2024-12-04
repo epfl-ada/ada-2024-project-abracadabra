@@ -6,8 +6,10 @@ from src.utils.countries_map import match_countries, draw_map
 def plot_distribution_number_ratings_per_country_of_origin_of_user(users_df, ratings_df):
     users_df = correct_number_ratings_per_user(users_df,ratings_df)
     users_df = match_countries(users_df)
-    users_df = users_df.groupby('location')['nbr_ratings_total'].sum()
 
+    users_df = users_df.groupby('location')['nbr_ratings_total'].sum()
+    #users_df.to_csv('locations_of_users.txt', index=True, sep='\t')
+    
     users_df = users_df.sort_values(ascending=False)#use.head(100) if want 100 first coountires
 
     # Create the bar plot

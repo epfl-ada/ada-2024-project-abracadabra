@@ -63,6 +63,7 @@ def match_countries(breweries_df):
 
     breweries_df['location'] = breweries_df['location'].apply(lambda x: 'United States of America' if 'United States' in x else x)
     breweries_df['location'] = breweries_df['location'].apply(lambda x: 'United States of America' if 'Utah' in x else x)
+    breweries_df['location'] = breweries_df['location'].apply(lambda x: 'United States of America' if 'Hawaii' in x else x)
 
     breweries_df['location'] = breweries_df['location'].apply(lambda x: 'United Kingdom' if 'United Kingdom' in x else x)
     breweries_df['location'] = breweries_df['location'].apply(lambda x: 'United Kingdom' if 'Wales' in x else x)
