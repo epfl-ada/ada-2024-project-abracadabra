@@ -45,7 +45,7 @@ def visualize_gmm_all_dimensions(attributes, n_components_gmm = 3):
     palette = sns.color_palette("Set3", n_components_gmm)
     print("END palette")
 
-    sns.pairplot(attributes_df, hue='Label', diag_kind='kde', palette=palette)
+    sns.pairplot(attributes_df, hue='Label', diag_kind='kde', palette=palette, plot_kws={"s": 1})
     print("END pariplot")
 
     plt.suptitle("Pairwise Plots of Scaled Attributes by GMM Labels", y=1.02)
