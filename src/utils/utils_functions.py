@@ -135,6 +135,75 @@ def PCA_plot(data, attributes_of_interest_PCA=['appearance', 'aroma', 'palate', 
 
 
 # Part 2
+def filter_ratings_new(ratings_df, beers_df, breweries_df, users_df, threshold, attributes):
+    '''
+    Filter the beer with too few ratings or textual reviews.
+
+    Parameters :
+    - ratings_df: DataFrame containing ratings and textual reviews data
+    - beers_df: DataFrame containing beers data
+    - breweries_df: DataFrame containing breweries data
+    - threshold: Minimal number of specific attribute ratings required to select a beer for the analysis
+    - attributes: Attributes for which we want to have a minimal number of rating to select a beer for the analysis
+
+    Returns :
+    - DataFrame filtered. Only ratings for which the beer has enough number of ratings are remaining. Furthermore, the returned DataFrame
+    only contains the meaningful features/attributes and the beer id.
+    - df_breweries_filtered: DataFrame containing only the breweries remaining after filetering
+    - beers_df: DataFrame containing only the beers remaining after filetering
+    '''
+
+    # Keeping only the relevant column/features : attributes and id_beer
+    columns_to_keep = attributes + ['id_beer'] + ['id_user'] + ['id_brewery']
+    df_filtered = ratings_df[columns_to_keep]
+
+    # Dropping the rows with nan values
+    df_filtered = df_filtered.dropna(subset=attributes, how='any')
+    print(
+        "Pourcentage of ratings remaining after dropping rows with nan values in selected attributes: {:.2f} %".format(
+            100 * len(df_filtered) / len(ratings_df)))
+
+    # Group the beer per id and compute the size of each group (number of filtered ratings for each beer)
+    valid_ratings_count = df_filtered.groupby('id_beer').size()
+
+    # Keep all ratings for which the beer has enough filtered ratings
+    beer_remaining = valid_ratings_count[valid_ratings_count >= threshold]
+    df_filtered = df_filtered[df_filtered['id_beer'].isin(beer_remaining.index)]
+    print(
+        "Pourcentage of ratings remaining after dropping rating for which beer has too few valid ratings : {:.2f} %".format(
+            100 * len(df_filtered) / len(ratings_df)))
+
+    init_length = len(beers_df)
+    beers_df = beers_df.copy()
+    beers_df = beers_df[beers_df['id'].isin(beer_remaining.index)]
+    beers_df.loc[:, 'true_number_ratings'] = beers_df['id'].map(beer_remaining)
+    #beers_df['true_number_ratings'] = beers_df['id'].map(beer_remaining)
+    print(
+        "Pourcentage of beers remaining after dropping rating for which a beer has too few valid ratings : {:.2f} %".format(
+            100 * len(beers_df) / init_length))
+    beers_df = beers_df.drop(columns='nbr_ratings').rename(columns={'true_number_ratings':'nbr_ratings'})
+
+    valid_beers_count = beers_df.groupby('brewery_id').size()
+    init_length = len(breweries_df)
+    breweries_df = breweries_df.copy()
+    breweries_df = breweries_df[breweries_df.id.isin(valid_beers_count.index)]
+    breweries_df.loc[:, 'true_number_beers'] = breweries_df['id'].map(valid_beers_count)
+    #breweries_df['true_number_beers'] = breweries_df['id'].map(valid_beers_count)
+
+    print(
+        "Pourcentage of breweries remaining after dropping rating for which a beer has too few valid ratings : {:.2f} %".format(
+            100 * len(breweries_df) / init_length))
+    breweries_df = breweries_df.drop(columns='nbr_beers').rename(columns={'true_number_beers':'nbr_beers'})
+
+    #Keep the users we want:
+    init_length = len(users_df)
+    users_df = users_df.copy()
+    users_df = users_df[users_df.id.isin(df_filtered.id_user)]
+    print(
+        "Pourcentage of users remaining after dropping rating for which a beer has too few valid ratings : {:.2f} %".format(
+            100 * len(users_df) / init_length))
+    return df_filtered, breweries_df, beers_df, users_df
+
 def filter_ratings(ratings_df, threshold, attributes):
     '''
     Filter the beer with too few ratings or textual reviews.
@@ -436,6 +505,39 @@ def compute_variance_per_attribute(ratings_df, attributes_of_interest):
     grouped_ratings = ratings_df.groupby('id_beer')
     return grouped_ratings[attributes_of_interest].var()
 
+def compute_stastics(ratings_df, attributes = ['aroma','palate','taste','overall','rating'], source = ['ad','rb']):
+    stats = {}
+    for dataset in source:
+        stats[dataset] = {}
+        new_ratings = ratings_df[ratings_df['dataset']==dataset]
+        for attrib in attributes:
+            data = new_ratings[attrib].dropna()
+            resolution = np.diff(np.sort(data.unique())).min()
+            stats[dataset][attrib] = {'min': data.min(), 'max': data.max(), 'median': data.median(), 'resolution': resolution}
+
+    print(stats)
+
+def plot_var_distrib_violin_grades(ratings_df):
+    ratings_advocate = ratings_df[ratings_df['dataset']=='ad']
+    ratings_ratebeer = ratings_df[ratings_df['dataset']=='rb']
+
+    ratings_advocate = ratings_advocate[['aroma','palate','taste','overall','rating']]
+    ratings_ratebeer = ratings_ratebeer[['aroma','palate','taste','overall','rating']]
+
+    sns.violinplot(ratings_ratebeer)
+    plt.title("Distribution of grades across various attributes on the ratebeer dataset")
+    plt.xlabel("Attributes")
+    plt.ylabel("Grade")
+    plt.show()
+
+    sns.violinplot(ratings_advocate)
+    plt.title("Distribution of grades across various attributes on the advocate dataset")
+    plt.xlabel("Attributes")
+    plt.ylabel("Grade")
+    plt.show()
+
+    del ratings_advocate
+    del ratings_ratebeer
 
 def plot_var_distrib_violin(var_df):
     sns.violinplot(var_df)
@@ -467,3 +569,17 @@ def plot_var_boxplot(controv_df, univ_df):
     plt.yticks([0, 0.5, 1, 1.5, 2, 2.5, 3])
     plt.tight_layout()
     plt.show()
+
+def plot_histogram_nbr_ratings_total(users_df):
+    #Uses the code of the Exercise 2: Becoming a DataVizard solution.ipynb
+    array_1000 = plt.hist(users_df.nbr_ratings_total,bins=10000,log=True,histtype='step')
+    plt.close()
+
+    plt.loglog(array_1000[1][1:],array_1000[0])
+    plt.title('Distribution of Total Number of Ratings', fontsize=16)
+    plt.xlabel('Number of Ratings in logscale', fontsize=14)
+    plt.ylabel('Frequency in logscale', fontsize=14)
+
+    plt.show()
+
+    print(users_df.nbr_ratings_total.describe())
