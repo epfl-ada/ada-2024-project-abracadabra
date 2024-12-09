@@ -24,7 +24,7 @@ def plot_distribution_number_ratings_per_country_of_origin_of_user(users_df, rat
     plt.tight_layout()
     plt.show()
 
-def plot_origin_users(beers_df,users_df, ratings_df, labels, label_to_match = 0):
+def plot_frequency_user_from_country_label(beers_df,users_df, ratings_df, labels, label_to_match = 0):
     
     """
     à chaque utilisateur ajouter une colonne sur le nombre de bière qu'il a noté qui sont définis comment lael_to_match_
@@ -33,12 +33,16 @@ def plot_origin_users(beers_df,users_df, ratings_df, labels, label_to_match = 0)
 
     use id in users and id_user in ratings_df, id_beer for beer in ratings_df
     """
+    possible_labels = ['universal', 'neutral', 'controversial']
+
     users_df = correct_number_ratings_per_user(users_df,ratings_df)
     users_nbr_labeled_ratings = compute_nbr_controversial_ratings_per_user(beers_df,users_df, ratings_df, labels, label_to_match)
     users_nbr_labeled_ratings = match_countries(users_nbr_labeled_ratings)
     users_nbr_labeled_ratings = users_nbr_labeled_ratings.groupby('location').agg({'nbr_ratings_total': 'sum','nbr_ratings_labelled_matched': 'sum'}).reset_index()
     users_nbr_labeled_ratings['frequency'] = users_nbr_labeled_ratings.nbr_ratings_labelled_matched/users_nbr_labeled_ratings.nbr_ratings_total
-    draw_map(users_nbr_labeled_ratings[['location','frequency']],'Frequency of the sum of labeled reviews for the origin of the reviewer')
+    title = 'Frequency of the ratings of a country labeled as ' + possible_labels[label_to_match] + ' by the users'
+    label = 'Frequency per country'
+    draw_map(users_nbr_labeled_ratings[['location','frequency']],title = title, label = label)
     return users_df
 
 def plot_origin_mean_users(beers_df,users_df, ratings_df, labels, label_to_match = 0):

@@ -11,12 +11,15 @@ import os
 
 
 
-def compute(breweries_df,beers_df, beers, labels, label_to_match):
+def compute_proportion_label_per_country(breweries_df,beers_df, beers, labels, label_to_match):
+    possible_labels = ['universal', 'neutral', 'controversial']
     beers['Label'] = labels
     beers = beers.merge(beers_df[['id', 'brewery_id']], left_on='id_beer', right_on='id', how='left')
 
     amount_beers_per_country_labelled = compute_number_beers_per_country(breweries_df, beers, label_to_match)
-    draw_map(amount_beers_per_country_labelled[['location','frequency']],'Beer Distribution by Country')
+
+    title = 'Map of the proportion of beer labelled as ' + possible_labels[label_to_match] + ' per country'
+    draw_map(amount_beers_per_country_labelled[['location','frequency']],title = title, label = 'Proportion of beer per country')
 
 def compute_number_beers_per_country(breweries_df, beers, label_to_match):
     beers_labeled = beers[beers['Label'] == label_to_match]
@@ -29,7 +32,7 @@ def compute_number_beers_per_country(breweries_df, beers, label_to_match):
     breweries_df['frequency'] = breweries_df.amount_of_labels/breweries_df.nbr_beers
     return breweries_df
 
-def draw_map(countries_Beers_labelled,title, column_for_plot = 'frequency', min = 0):
+def draw_map(countries_Beers_labelled,title, column_for_plot = 'frequency', min = 0, label = "Proportion of Beers per Country"):
     current_directory = os.getcwd()
     shapefile_path = current_directory+ "/src/utils/data/ne_110m_admin_0_countries.shp"
 
@@ -39,9 +42,9 @@ def draw_map(countries_Beers_labelled,title, column_for_plot = 'frequency', min 
 
     fig, ax = plt.subplots(1, 1, figsize=(15, 10))
     if min ==0:
-        world.plot(column=column_for_plot, cmap='OrRd', legend=True,legend_kwds={'label': "Number of Beers per Country"},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax)
+        world.plot(column=column_for_plot, cmap='OrRd', legend=True,legend_kwds={'label': label},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax)
     if min == -1:
-        world.plot(column=column_for_plot, cmap='seismic', legend=True,legend_kwds={'label': "Number of Beers per Country"},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax)
+        world.plot(column=column_for_plot, cmap='seismic', legend=True,legend_kwds={'label': label},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax)
     ax.set_title(title, fontsize=16)
     plt.show()
 
