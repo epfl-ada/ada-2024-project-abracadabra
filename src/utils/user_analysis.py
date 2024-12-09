@@ -40,13 +40,14 @@ def add_label_to_comment(ratings_df, beers_df, labels):
     return ratings_with_labels
 
 def plot_proportion(ratings_df, level):
-
-    label_counts = ratings_df['label'].value_counts()
+    labels = ['universal','neutral', 'controversial']
+    label_counts = ratings_df['label'].value_counts().rename({0: 'universal', 1: 'neutral', 2: 'controversial'})
     label_frequency = label_counts/label_counts.sum()
-
     plt.figure(figsize=(10, 6))
     label_frequency.plot(kind='bar', color=['blue', 'orange', 'green'], alpha=0.7, edgecolor='black')
     plt.title('Number of Ratings by Label (' + level+')', fontsize=16)
     plt.xlabel('Label', fontsize=14)
+    plt.xticks(rotation=45)
+    plt.ylim(0, 1)
     plt.ylabel('Number of Ratings', fontsize=14)
     plt.show()

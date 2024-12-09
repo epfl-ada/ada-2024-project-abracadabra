@@ -11,7 +11,7 @@ from itertools import combinations
 
 ### Used for Part 1:
 
-def recompute_grade(df, min_grade_value=1, max_grade_value=5):
+def recompute_grade(df, min_grade_value=1, max_grade_value=5, attributes_of_interest = ['appearance', 'aroma', 'palate', 'taste', 'overall', 'rating']):
     '''
     Recomputes the grades for the different attributes.
     
@@ -23,7 +23,7 @@ def recompute_grade(df, min_grade_value=1, max_grade_value=5):
     Returns :
     - DataFrame with grades on new scale. 
     '''
-    attributes_of_interest = ['appearance', 'aroma', 'palate', 'taste', 'overall', 'rating']
+
     dataset = ['rb', 'ad']
 
     min_max_values = df[df['dataset'].isin(dataset)].groupby('dataset')[attributes_of_interest].agg(['min', 'max'])
@@ -365,6 +365,43 @@ def t_test_statistic(df, attributes_of_interest=['appearance', 'aroma', 'palate'
     sns.heatmap(p_value_df, annot=True, cmap="Reds", vmin=0, vmax=1, square=True, cbar_kws={'label': 'P-Value'})
 
     plt.title("P-Value Heatmap for the T Test on the variance of the different attributes")
+    plt.show()
+
+def single_t_test_statistic_(df, attributes_of_interest=['appearance', 'aroma', 'palate', 'taste', 'overall', 'rating'], attribute_single = 'sentiment_bert'):
+    '''
+    This function performs a t test. We want to test the mean of the variance of the different attributes.
+    The H0 hypothesis is that the true mean of the variance of a given attribute between the different bears are equal.
+    H1 is that the means are different. Furthermore we plot in a heatmap the different values obtained between the variance of the attributes.
+
+
+    Parameters :
+    - df: DataFrame containing the variance data
+    - attributes_interest: Attributes we chose to analyse the variance from
+    '''
+    p_value_table = np.zeros((len(attributes_of_interest), 1))
+    ci_table = np.zeros((len(attributes_of_interest), 1, 2))
+    mean_value_mean = np.zeros((len(attributes_of_interest), 1))
+    annotations = np.empty(p_value_table.shape, dtype=object)
+
+    for i, attribute1 in enumerate(attributes_of_interest):
+        ttest_result = ttest_ind(df[attribute1], df[attribute_single])
+
+        ci_t_test_result = ttest_result.confidence_interval(confidence_level=0.95)
+        p_value_table[i, 0] = ttest_result.pvalue
+        ci_table[i, 0, 0] = ci_t_test_result.low
+        ci_table[i, 0, 1] = ci_t_test_result.high
+        mean_value_mean[i, 0] = df[attribute_single].mean()
+        annotations[i, 0] = f"({mean_value_mean[i, 0]:.2f} ± {ci_table[i, 0, 0]:.2f}, {ci_table[i, 0, 1]:.2f})"
+    
+
+    p_value_df = pd.DataFrame(p_value_table, index=attributes_of_interest, columns=[attribute_single])
+
+    p_value_df.plot(kind="bar", legend=False)
+    plt.title("P-Values by Attribute")
+    plt.ylabel("P-Value")
+    plt.xlabel("Attributes")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
     plt.show()
 
 

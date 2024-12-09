@@ -29,24 +29,20 @@ def visualize_gmm_all_dimensions(attributes, n_components_gmm = 3):
     gmm = GaussianMixture(n_components = n_components_gmm, random_state=0)
     labels = gmm.fit_predict(attributes_scaled)
 
-    print("INITIA DF")
     attributes_df = pd.DataFrame(attributes_scaled, columns=[f"Dim_{i+1}" for i in range(attributes_scaled.shape[1])])
-    print("FINISHED DF")
 
     # Assuming the original 'attributes' DataFrame has the same columns
     # Replace 'Dim_X' with actual column names if they exist
     column_names = attributes.columns if hasattr(attributes, 'columns') else [f"Dim_{i+1}" for i in range(attributes_scaled.shape[1])]
     attributes_df.columns = column_names
 
-    print("INIT LABELS")
     attributes_df['Label'] = labels  # Add labels as a column
-    print("FINISHED LABELS")
 
     palette = sns.color_palette("Set3", n_components_gmm)
-    print("END palette")
-
+    
+    print("Started plotting")
     sns.pairplot(attributes_df, hue='Label', diag_kind='kde', palette=palette, plot_kws={"s": 1})
-    print("END pariplot")
+    print("Finished plotting")
 
     plt.suptitle("Pairwise Plots of Scaled Attributes by GMM Labels", y=1.02)
     plt.show()
