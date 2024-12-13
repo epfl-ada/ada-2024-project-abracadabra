@@ -3,6 +3,7 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 from scipy.stats import ttest_ind
+import math
 
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
@@ -24,6 +25,35 @@ def recompute_grade(df, min_grade_value=1, max_grade_value=5, attributes_of_inte
     - DataFrame with grades on new scale. 
     '''
 
+    dataset = ['rb', 'ad']
+
+    min_max_values = df[df['dataset'].isin(dataset)].groupby('dataset')[attributes_of_interest].agg(['min', 'max'])
+
+    for attribute in attributes_of_interest:
+        for name in dataset:
+            min_val = min_max_values.loc[name, (attribute, 'min')]
+            max_val = min_max_values.loc[name, (attribute, 'max')]
+
+            df.loc[df['dataset'] == name, attribute] = (
+                    (df.loc[df['dataset'] == name, attribute] - min_val) / (max_val - min_val) * (
+                    max_grade_value - min_grade_value) + min_grade_value)
+
+    return df
+
+
+def recompute_grade_with_sent(df, min_grade_value=1, max_grade_value=5):
+    '''
+    Recomputes the grades for the different attributes.
+    
+    Parameters :
+    - df: DataFrame containing user data.
+    - min_grade_value: minimal grade wanted.
+    - max_grade_value : maximal grade wanted.
+
+    Returns :
+    - DataFrame with grades on new scale. 
+    '''
+    attributes_of_interest = ['appearance', 'aroma', 'palate', 'taste', 'overall', 'rating', 'sentiment_bert']
     dataset = ['rb', 'ad']
 
     min_max_values = df[df['dataset'].isin(dataset)].groupby('dataset')[attributes_of_interest].agg(['min', 'max'])
@@ -224,9 +254,11 @@ def filter_ratings(ratings_df, threshold, attributes):
 
     # Dropping the rows with nan values
     df_filtered = df_filtered.dropna(subset=attributes, how='any')
-    print(
-        "Pourcentage of ratings remaining after dropping rows with nan values in selected attributes: {:.2f} %".format(
-            100 * len(df_filtered) / len(ratings_df)))
+
+    # Print percentage of beer dropped due to nan values in the ratings
+    # print(
+    #    "Percentage of ratings remaining after dropping rows with nan values in selected attributes: {:.2f} %".format(
+    #        100 * len(df_filtered) / len(ratings_df)))
 
     # Group the beer per id and compute the size of each group (number of filtered ratings for each beer)
     valid_ratings_count = df_filtered.groupby('id_beer').size()
@@ -235,10 +267,18 @@ def filter_ratings(ratings_df, threshold, attributes):
     beer_remaining = valid_ratings_count[valid_ratings_count >= threshold]
     df_filtered = df_filtered[df_filtered['id_beer'].isin(beer_remaining.index)]
     print(
-        "Pourcentage of ratings remaining after dropping rating for which beer has too few valid ratings : {:.2f} %".format(
+        "Percentage of ratings remaining after dropping rows with nan values and rating for which beer has less than {} valid ratings : {:.2f} %".format(
+            threshold,
             100 * len(df_filtered) / len(ratings_df)))
 
     return df_filtered
+
+
+def test_threshold_filtering(ratings_df):
+    thresholds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 80, 100, 200]
+    
+    for i, threshold in enumerate(thresholds):
+        filtered_ratings = filter_ratings(ratings_df, threshold, ['appearance', 'aroma', 'palate', 'taste','overall'])
 
 
 # Part 2
@@ -558,8 +598,8 @@ def plot_var_distrib_violin_grades(ratings_df):
     ratings_advocate = ratings_df[ratings_df['dataset']=='ad']
     ratings_ratebeer = ratings_df[ratings_df['dataset']=='rb']
 
-    ratings_advocate = ratings_advocate[['aroma','palate','taste','overall','rating']]
-    ratings_ratebeer = ratings_ratebeer[['aroma','palate','taste','overall','rating']]
+    ratings_advocate = ratings_advocate[['aroma','palate','taste','overall','appearance', 'rating']]
+    ratings_ratebeer = ratings_ratebeer[['aroma','palate','taste','overall','appearance', 'rating']]
 
     sns.violinplot(ratings_ratebeer)
     plt.title("Distribution of grades across various attributes on the ratebeer dataset")
@@ -620,3 +660,47 @@ def plot_histogram_nbr_ratings_total(users_df):
     plt.show()
 
     print(users_df.nbr_ratings_total.describe())
+
+
+def plot_threshold_variance_variation(ratings_df):
+    # TODO LATER WITH FILTER_RATINGS NEW INSTEAD
+    thresholds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 80, 100, 200]
+
+    n_rows = 3
+    n_cols = math.ceil(len(thresholds) / n_rows)
+    
+    fig, axs = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(20, 10), sharey=True)
+    axs = axs.flatten()  # Flatten the 2D array of axes for easier indexing
+
+    for i, threshold in enumerate(thresholds):
+        filtered_ratings = filter_ratings(ratings_df, threshold, ['appearance', 'aroma', 'palate', 'taste','overall'])
+        var_attr = compute_variance_per_attribute(filtered_ratings, ['appearance', 'aroma', 'palate', 'taste','overall'])
+
+        sns.violinplot(data=var_attr, ax=axs[i])
+        axs[i].set_title(f"Threshold {threshold}")
+        axs[i].set_xlabel("Attributes")
+
+    plt.tight_layout()
+    plt.show()
+
+def plot_threshold_variance_variation_with_sent(ratings_df):
+    # TODO LATER WITH FILTER_RATINGS NEW INSTEAD
+    thresholds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 80, 100, 200]
+
+    n_rows = 3
+    n_cols = math.ceil(len(thresholds) / n_rows)
+    
+    fig, axs = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(20, 10), sharey=True)
+    axs = axs.flatten()  # Flatten the 2D array of axes for easier indexing
+
+    for i, threshold in enumerate(thresholds):
+        filtered_ratings = filter_ratings(ratings_df, threshold, ['appearance', 'aroma', 'palate', 'taste','overall', 'sentiment_bert'])
+        var_attr = compute_variance_per_attribute(filtered_ratings, ['appearance', 'aroma', 'palate', 'taste','overall', 'sentiment_bert'])
+
+        sns.violinplot(data=var_attr, ax=axs[i])
+        axs[i].set_title(f"Threshold {threshold}")
+        axs[i].set_xlabel("Attributes")
+
+    plt.tight_layout()
+    plt.show()
+
