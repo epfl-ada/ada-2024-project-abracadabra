@@ -8,12 +8,12 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
-def plot_distribution_rating_abv(ratings_df, beer_df, labels, save = False, interactive = False):
+def plot_distribution_rating_abv(ratings_df, beer_df, labels, save = False, interactive = False, label_list=[2,0,1]):
     ratings_df = ratings_df.copy(deep=True)
     ratings_df['labels'] = labels
     merged_df = ratings_df.merge(beer_df, left_index=True, right_on='id').drop(columns = ['id','appearance','aroma','palate','taste','overall'])
     #plot_single(merged_df, label_of_interest)
-    range_grouped = compute_range_grouped(merged_df)
+    range_grouped = compute_range_grouped(merged_df, labels=label_list)
     if interactive:
         plot_three_interactive(range_grouped, save = save)
     else:
@@ -62,7 +62,7 @@ def plot_single(merged_df, label_of_interest):
     plt.tight_layout()
     plt.show()
 
-def compute_range_grouped(merged_df, labels = [0,1,2]):
+def compute_range_grouped(merged_df, labels = [2,0,1]):
     grouped = merged_df.groupby('abv').agg(total_count=('labels', 'size'),label_match_universal=('labels', lambda x: (x == labels[0]).sum()),label_match_neutral=('labels', lambda x: (x == labels[1]).sum()),label_match_controversial=('labels', lambda x: (x == labels[2]).sum())).reset_index()
     grouped['frequency_universal']=grouped['label_match_universal']/grouped['total_count']
     grouped['frequency_neutral']=grouped['label_match_neutral']/grouped['total_count']

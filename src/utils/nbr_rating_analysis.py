@@ -7,11 +7,11 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 
-def plot_distribution_rating_nbr(ratings_df, beer_df, labels):
+def plot_distribution_rating_nbr(ratings_df, beer_df, labels, label_list):
     ratings_df = ratings_df.copy(deep=True)
     ratings_df['labels'] = labels
     merged_df = ratings_df.merge(beer_df, left_index=True, right_on='id').drop(columns = ['id','appearance','aroma','palate','taste','overall'])
-    grouped_df = plot_three(merged_df)
+    grouped_df = plot_three(merged_df,  labels=label_list)
     return grouped_df
 
 def plot_three(merged_df, labels=[0, 1, 2]):
