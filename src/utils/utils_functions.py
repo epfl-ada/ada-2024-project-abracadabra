@@ -234,7 +234,7 @@ def filter_ratings_new(ratings_df, beers_df, breweries_df, users_df, threshold, 
             100 * len(users_df) / init_length))
     return df_filtered, breweries_df, beers_df, users_df
 
-def filter_ratings(ratings_df, threshold, attributes):
+def filter_ratings(ratings_df, threshold, attributes, verbose=True):
     '''
     Filter the beer with too few ratings or textual reviews.
 
@@ -266,7 +266,8 @@ def filter_ratings(ratings_df, threshold, attributes):
     # Keep all ratings for which the beer has enough filtered ratings
     beer_remaining = valid_ratings_count[valid_ratings_count >= threshold]
     df_filtered = df_filtered[df_filtered['id_beer'].isin(beer_remaining.index)]
-    print(
+    if verbose:
+        print(
         "Percentage of ratings remaining after dropping rows with nan values and rating for which beer has less than {} valid ratings : {:.2f} %".format(
             threshold,
             100 * len(df_filtered) / len(ratings_df)))
@@ -274,11 +275,69 @@ def filter_ratings(ratings_df, threshold, attributes):
     return df_filtered
 
 
-def test_threshold_filtering(ratings_df):
-    thresholds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 80, 100, 200]
+# May be useful later
+# def drop_nan_ratings(ratings_df):
+#     df_filtered = ratings_df.dropna(how='any')
+#     print("Percentage of ratings remaining after dropping nan values {}%".format(len(df_filtered)/len(ratings_df)))
+#     return df_filtered
+
+
+def plot_threshold_filtering(ratings_df, thresholds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 80, 100, 200], verbose = False):
+    '''
+    Plot the remaining percentager of ratings and beers as a function of threshold filtering value
+    Percentage is compared to ratings and beers without nan values and at least one rating
+
+    Parameters :
+    - ratings_df: DataFrame containing ratings and textual reviews data
+    - thresholds: List of threshold representing minimal number of specific attribute ratings required to select a beer for the analysis
+    - verbose: Wheter to print the remaining percentage of ratings after each filtering
+
+    Returns :
+    - None
+    '''
+    # Filtering nan and ensuring beers with at least one rating for percentage comparison purpose 
+    ratings_df = filter_ratings(ratings_df, 1, ['appearance', 'aroma', 'palate', 'taste','overall'], verbose=False)
+
+    values = []
+
+    # Original number of ratings and beers for comparison
+    original_nb_ratings = len(ratings_df)
+    original_nb_beers = len(ratings_df['id_beer'].unique())
+
+    # Applying the filter and storing the percentage of ratings and beers remaining for each threshold
+    for t in thresholds:
+        filtered_ratings = filter_ratings(ratings_df, t, ['appearance', 'aroma', 'palate', 'taste','overall'], verbose=False)
+        values.append({
+            'threshold': t, 
+            'percentage_rating': 100*len(filtered_ratings)/original_nb_ratings, 
+            'percentage_beer': 100*len(filtered_ratings['id_beer'].unique())/original_nb_beers})
+
+    values_df = pd.DataFrame(values)
+
+    # Plot
+    fig, ax1 = plt.subplots(figsize=(10, 6))
+
+    ax1.set_xlabel('Threshold')
+    ax1.set_title('Effect of Threshold on Ratings and Beers Filtering')
+    ax1.grid(True)
+
+    # Plot remaining ratings
+    ax1.plot(values_df['threshold'], values_df['percentage_rating'], 'b-o', label='Remaining Ratings (%)')
+    ax1.set_ylabel('Percentage of Remaining Ratings', color='b')
+    ax1.tick_params(axis='y', labelcolor='b')
+    ax1.legend(loc='upper right')
+
+    # Second y-axis for remaining beers
+    ax2 = ax1.twinx()  # Second y-axis sharing the same x-axis
+    ax2.plot(values_df['threshold'], values_df['percentage_beer'], 'r-s', label='Remaining Beers (%)')
+    ax2.set_ylabel('Percentage of Remaining Beers', color='r')
+    ax2.tick_params(axis='y', labelcolor='r')    
+    ax2.legend(loc='upper center')
+
+    plt.tight_layout()
+    plt.show()
+
     
-    for i, threshold in enumerate(thresholds):
-        filtered_ratings = filter_ratings(ratings_df, threshold, ['appearance', 'aroma', 'palate', 'taste','overall'])
 
 
 # Part 2
@@ -631,18 +690,18 @@ def plot_overall_hist_distrib(var_df):
     plt.show()
 
 def plot_var_boxplot(controv_df, univ_df):
-    plt.subplot(2, 1, 2)
+    plt.subplot(2, 1, 1)
     sns.boxplot(controv_df)
     plt.title("Distribution of variance across attributes for beers with high variance of overall score (labelled controversial)")
-    plt.xlabel("attributes")
-    plt.ylabel("Variance")
+    plt.xlabel("Attributes")
+    plt.ylabel("Variance distribution")
     plt.yticks([0, 0.5, 1, 1.5, 2, 2.5, 3])
 
-    plt.subplot(2, 1, 1)
+    plt.subplot(2, 1, 2)
     sns.boxplot(univ_df)
     plt.title("Distribution of variance across attributes for beers with low variance of overall score (labelled universal)")
-    plt.xlabel("Attriubtes")
-    plt.ylabel("Variance")
+    plt.xlabel("Attributes")
+    plt.ylabel("Variance distribution")
     plt.yticks([0, 0.5, 1, 1.5, 2, 2.5, 3])
     plt.tight_layout()
     plt.show()
