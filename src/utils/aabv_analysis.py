@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
-def plot_distribution_rating_abv(ratings_df, beer_df, labels, label_of_interest =2, save = False, interactive = False):
+def plot_distribution_rating_abv(ratings_df, beer_df, labels, save = False, interactive = False):
     ratings_df = ratings_df.copy(deep=True)
     ratings_df['labels'] = labels
     merged_df = ratings_df.merge(beer_df, left_index=True, right_on='id').drop(columns = ['id','appearance','aroma','palate','taste','overall'])
@@ -63,7 +63,6 @@ def plot_single(merged_df, label_of_interest):
     plt.show()
 
 def compute_range_grouped(merged_df, labels = [0,1,2]):
-    print(merged_df.head())
     grouped = merged_df.groupby('abv').agg(total_count=('labels', 'size'),label_match_universal=('labels', lambda x: (x == labels[0]).sum()),label_match_neutral=('labels', lambda x: (x == labels[1]).sum()),label_match_controversial=('labels', lambda x: (x == labels[2]).sum())).reset_index()
     grouped['frequency_universal']=grouped['label_match_universal']/grouped['total_count']
     grouped['frequency_neutral']=grouped['label_match_neutral']/grouped['total_count']
@@ -231,7 +230,7 @@ def plot_three_interactive(range_grouped, save=False):
         name='Universal Beers',
         marker=dict(color='green'),
         hoverinfo='x+y+name',
-        base=range_grouped['total_beers_neutral'] + range_grouped['total_beers_controversial']
+        base=range_grouped['total_beers_neutral'] + range_grouped['total_beers_controversial']  # Stack on top of neutral + controversial beers
     ), row=2, col=1)
 
     # Update layout for the entire figure
