@@ -558,11 +558,11 @@ def compute_correlation(df_variances, attribute_corr):
     correlations = df_variances.corr()[attribute_corr[0]]
     return correlations.drop(attribute_corr)
 
-def plot_correlation(correlations):
+def plot_correlation(correlations, title= 'Correlation of attributes variances with Overall Variance'):
     # Plot the correlation
     plt.figure(figsize=(8, 6))
     correlations.plot(kind='bar', color=['blue' if c > 0 else 'red' for c in correlations])
-    plt.title("Correlation of attributes variances with Overall Variance")
+    plt.title(title)
     plt.xlabel('Attributes')
     plt.ylabel('Correlation')
     plt.axhline(0, color='black', linewidth=0.5)
