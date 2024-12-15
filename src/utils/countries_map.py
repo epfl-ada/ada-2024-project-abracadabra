@@ -19,7 +19,7 @@ def compute_proportion_label_per_country(breweries_df,beers_df, beers, labels, l
     amount_beers_per_country_labelled = compute_number_beers_per_country(breweries_df, beers, label_to_match)
 
     title = 'Map of the proportion of beer labelled as ' + possible_labels[label_to_match] + ' per country'
-    draw_map(amount_beers_per_country_labelled[['location','frequency']],title = title, label = 'Proportion of beer per country')
+    draw_map(amount_beers_per_country_labelled[['location','frequency']],title = title, label = 'Proportion of beer per country', min_=0)
 
 def compute_number_beers_per_country(breweries_df, beers, label_to_match):
     beers_labeled = beers[beers['Label'] == label_to_match]
@@ -32,7 +32,7 @@ def compute_number_beers_per_country(breweries_df, beers, label_to_match):
     breweries_df['frequency'] = breweries_df.amount_of_labels/breweries_df.nbr_beers
     return breweries_df
 
-def draw_map(countries_Beers_labelled,title, column_for_plot = 'frequency', min = 0, label = "Proportion of Beers per Country"):
+def draw_map(countries_Beers_labelled,title, column_for_plot = 'frequency', min_ = 0, label = "Proportion of Beers per Country"):
     current_directory = os.getcwd()
     shapefile_path = current_directory+ "/src/utils/data/ne_110m_admin_0_countries.shp"
 
@@ -41,10 +41,10 @@ def draw_map(countries_Beers_labelled,title, column_for_plot = 'frequency', min 
     world[column_for_plot] = world[column_for_plot].fillna(0)
 
     fig, ax = plt.subplots(1, 1, figsize=(15, 10))
-    if min ==0:
-        world.plot(column=column_for_plot, cmap='OrRd', legend=True,legend_kwds={'label': label},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax)
-    if min == -1:
-        world.plot(column=column_for_plot, cmap='seismic', legend=True,legend_kwds={'label': label},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax)
+    if min_ ==0:
+        world.plot(column=column_for_plot, cmap='OrRd', legend=True,legend_kwds={'label': label},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax, vmin = min_, vmax = 1)
+    if min_ == -1:
+        world.plot(column=column_for_plot, cmap='seismic', legend=True,legend_kwds={'label': label},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax, vmin = min_,vmax = 1)
     ax.set_title(title, fontsize=16)
     plt.show()
 
@@ -82,4 +82,43 @@ def match_countries(breweries_df):
     breweries_df['location'] = breweries_df['location'].apply(lambda x: 'China' if 'Tibet' in x else x)
     breweries_df['location'] = breweries_df['location'].apply(lambda x: 'Slovakia' if 'Slovak Republic' in x else x)
 
+    breweries_df['location'] = breweries_df['location'].apply(lambda x: 'Unknown' if 'nan' in x else x)
+
     return breweries_df
+
+def plot_distribution_number_ratings_per_country_of_origin_of_beer(beers_df, breweries_df_new, ratings_df, N = 100):
+    beers_df = beers_df.copy(deep = True)
+    beers_df = beers_df.merge(breweries_df_new[['id', 'location']], left_on='brewery_id', right_on='id', how='left',suffixes=('', '_breweries')).drop(columns = 'id_breweries')
+    beers_df = correct_number_ratings_per_beers(beers_df,ratings_df)
+    beers_df = match_countries(beers_df)
+    beers_df = beers_df.groupby('location')['nbr_ratings'].sum()
+    #users_df.to_csv('locations_of_users.txt', index=True, sep='\t')
+    
+    beers_df = beers_df.sort_values(ascending=False).head(N)# if want 100 first coountires
+
+    beers_df.index = beers_df.index.where(beers_df.index != 'nan', 'Unknown')
+
+    title = 'Top ' +str(N) + ' Countries by Total Beers'
+    # Create the bar plot
+    plt.figure(figsize=(16, 12))
+    beers_df.plot(kind='bar', color='skyblue', edgecolor='black', width=0.8)
+    plt.yscale('log')
+    plt.title(title, fontsize=16)
+    plt.xlabel('Country')
+    plt.ylabel('Total Beers')
+    plt.xticks(rotation=45, ha='right', fontsize=10)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.show()
+
+def correct_number_ratings_per_beers(beers_df,ratings_df):
+    beer_label_counts = ratings_df['id_beer'].value_counts()
+
+    beers_df_corrected = beers_df.copy(deep = True)
+    beers_df_corrected.set_index('id', inplace=True)
+    beers_df_corrected['nbr_ratings'] = beers_df_corrected.index.map(beer_label_counts).fillna(0).astype(int)
+    beers_df_corrected.reset_index(inplace=True)
+
+    beers_df_corrected['location'] = beers_df_corrected['location'].astype(str)
+
+    return beers_df_corrected
