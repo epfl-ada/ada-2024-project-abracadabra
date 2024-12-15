@@ -37,7 +37,7 @@ def plots_statistics_origin_beer_wrt_user_origin_sum(beers_df, breweries_df, use
     users_nbr_labeled_ratings = compute_score_for_controversial_sum(users_nbr_labeled_ratings)
 
     #Draw map
-    draw_map(users_nbr_labeled_ratings[['location','score']],column_for_plot = 'score', min = -1,title = 'Map of the score of ' + possible_labels[label_to_match] + ' for the users per country', label='Score per country')
+    draw_map(users_nbr_labeled_ratings[['location','score']],column_for_plot = 'score', min_ = -1,title = 'Map of the score of ' + possible_labels[label_to_match] + ' for the users per country', label='Score per country')
 
 def compute_nbr_origin_of_ratings_per_user(beers_df, users_df,breweries_df, ratings_df,labels, label_to_match):
     beers_df_with_label = beers_df.copy()
