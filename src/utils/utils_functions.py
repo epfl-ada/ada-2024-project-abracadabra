@@ -204,7 +204,7 @@ def filter_ratings_new(ratings_df, beers_df, breweries_df, users_df, threshold, 
             100 * len(df_filtered) / len(ratings_df)))
 
     init_length = len(beers_df)
-    beers_df = beers_df.copy()
+    beers_df = beers_df.copy(deep = True)
     beers_df = beers_df[beers_df['id'].isin(beer_remaining.index)]
     beers_df.loc[:, 'true_number_ratings'] = beers_df['id'].map(beer_remaining)
     #beers_df['true_number_ratings'] = beers_df['id'].map(beer_remaining)
@@ -215,7 +215,7 @@ def filter_ratings_new(ratings_df, beers_df, breweries_df, users_df, threshold, 
 
     valid_beers_count = beers_df.groupby('brewery_id').size()
     init_length = len(breweries_df)
-    breweries_df = breweries_df.copy()
+    breweries_df = breweries_df.copy(deep = True)
     breweries_df = breweries_df[breweries_df.id.isin(valid_beers_count.index)]
     breweries_df.loc[:, 'true_number_beers'] = breweries_df['id'].map(valid_beers_count)
     #breweries_df['true_number_beers'] = breweries_df['id'].map(valid_beers_count)
@@ -227,7 +227,7 @@ def filter_ratings_new(ratings_df, beers_df, breweries_df, users_df, threshold, 
 
     #Keep the users we want:
     init_length = len(users_df)
-    users_df = users_df.copy()
+    users_df = users_df.copy(deep = True)
     users_df = users_df[users_df.id.isin(df_filtered.id_user)]
     print(
         "Pourcentage of users remaining after dropping rating for which a beer has too few valid ratings : {:.2f} %".format(
