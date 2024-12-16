@@ -21,8 +21,8 @@ def plots_statistics_origin_beer_wrt_user_origin_mean(beers_df, breweries_df, us
     users_nbr_labeled_ratings = compute_score_for_controversial(users_nbr_labeled_ratings)
     draw_map(users_nbr_labeled_ratings[['location','score']],'controversiality of the users for origin/abroad countries MEAN',column_for_plot = 'score', min = -1)
 
-def plots_statistics_origin_beer_wrt_user_origin_sum(beers_df, breweries_df, users_df, ratings_df, labels, label_to_match = 0):
-    possible_labels = ['universalality', 'neutrality', 'controversiality']
+def plots_statistics_origin_beer_wrt_user_origin_sum(beers_df, breweries_df, users_df, ratings_df, labels, label_to_match = 0, possible_labels = ['controversiality','universalality', 'neutrality']):
+
     #Clean the location for certain countries for plot purposes
     users_df = match_countries(users_df)
     breweries_df = match_countries(breweries_df)

@@ -763,3 +763,38 @@ def plot_threshold_variance_variation_with_sent(ratings_df):
     plt.tight_layout()
     plt.show()
 
+def plot_variance_evolution_batches(ratings_df,beers_df, attributes='rating'):
+    ratings_df= ratings_df[[attributes,'id','id_beer']].copy(deep = True)
+    beers_df = beers_df.copy(deep = True)
+
+    #Not necessary to do over id to get size but works fine.
+    ratings_df = ratings_df.groupby('id_beer').agg({attributes: 'std','id': 'size'}).rename(columns = {'id':'number_ratings'})
+
+    batch_edges = np.arange(0, 205, 5)
+    ratings_df['batch'] = pd.cut(ratings_df['number_ratings'], bins=batch_edges, right=False, labels=batch_edges[:-1])
+    ratings_df = ratings_df.rename(columns = {'batch':'batched_number_of_ratings'})
+    
+    batch_means = ratings_df.groupby('batched_number_of_ratings').agg({attributes: ['mean','std']})
+
+    batch_means.columns = ['mean_' + attributes, 'std_' + attributes]
+
+    plt.figure(figsize=(10, 6))
+    
+    # Plot mean
+    plt.plot(batch_means.index, batch_means['mean_' + attributes], label=f'Mean {attributes}', marker='o')
+    
+    # Plot standard deviation
+    plt.plot(batch_means.index, batch_means['std_' + attributes], label=f'Standard Deviation {attributes}', marker='s')
+    
+    # Formatting the plot
+    plt.title(f'Variance/Mean Evolution Over Batches ({attributes.capitalize()})')
+    plt.xlabel('Batch Number of Ratings')
+    plt.ylabel(f'{attributes.capitalize()}')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    
+    plt.show()
+
+
+    del ratings_df, beers_df,batch_means
