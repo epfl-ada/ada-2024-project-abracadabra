@@ -27,7 +27,7 @@ def plot_distribution_number_ratings_per_country_of_origin_of_user(users_df, rat
     plt.tight_layout()
     plt.show()
 
-def plot_frequency_user_from_country_label(beers_df,users_df, ratings_df, labels, label_to_match = 0):
+def plot_frequency_user_from_country_label(beers_df,users_df, ratings_df, labels, label_to_match = 0, possible_labels = ['controversial','universal', 'neutral']):
     
     """
     à chaque utilisateur ajouter une colonne sur le nombre de bière qu'il a noté qui sont définis comment lael_to_match_
@@ -36,7 +36,6 @@ def plot_frequency_user_from_country_label(beers_df,users_df, ratings_df, labels
 
     use id in users and id_user in ratings_df, id_beer for beer in ratings_df
     """
-    possible_labels = ['universal', 'neutral', 'controversial']
 
     users_df = correct_number_ratings_per_user(users_df,ratings_df)
     users_nbr_labeled_ratings = compute_nbr_controversial_ratings_per_user(beers_df,users_df, ratings_df, labels, label_to_match)

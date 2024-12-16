@@ -11,8 +11,8 @@ import os
 
 
 
-def compute_proportion_label_per_country(breweries_df,beers_df, beers, labels, label_to_match):
-    possible_labels = ['universal', 'neutral', 'controversial']
+def compute_proportion_label_per_country(breweries_df,beers_df, beers, labels, label_to_match, possible_labels = ['controversial','universal', 'neutral']):
+    
     beers['Label'] = labels
     beers = beers.merge(beers_df[['id', 'brewery_id']], left_on='id_beer', right_on='id', how='left')
 
