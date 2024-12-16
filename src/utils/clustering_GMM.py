@@ -39,7 +39,7 @@ def visualize_gmm_all_dimensions(attributes, n_components_gmm = 3):
 
     attributes_df['Label'] = labels  # Add labels as a column
 
-    palette = sns.color_palette("Set3", n_components_gmm)
+    palette = sns.color_palette("deep", n_components_gmm)#'set3
     
     print("Started plotting")
     sns.pairplot(attributes_df, hue='Label', diag_kind='kde', palette=palette)#, plot_kws={"s": 1})
