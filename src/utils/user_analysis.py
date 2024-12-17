@@ -89,3 +89,128 @@ def single_plot(ratings_df, label_list = [2,0,1]):
     plt.legend(title='Rating User Level', bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.tight_layout()
     plt.show()
+
+
+def compute_rating_by_user_time(ratings_df, users_df, beers_df, label, label_list = [2,0,1], user_level = [20,800]):
+    #We need ratings_df cause it has the dates, therefore we must also redrop all the nan
+    label_category = ['universal','neutral', 'controversial']
+    
+    ratings_df = ratings_df[['id_user','id_beer','date']].copy(deep = True)
+    users_df = users_df[['id','rating_user_level']].copy(deep = True)
+    beers_df = beers_df.copy(deep = True)
+
+    ratings_df = add_label_to_comment(ratings_df=ratings_df, beers_df=beers_df, labels = label)
+    ratings_df= ratings_df[~ratings_df.label.isna()]
+    ratings_df = ratings_df[ratings_df.id_user.isin(users_df.id)]#Normalement j'ai pas besoin de cette ligne...
+
+    ratings_df = ratings_df.sort_values(by=['id_user', 'date'])
+    ratings_grouped = ratings_df.groupby('id_user').head(user_level[0])
+    label_counts = ratings_grouped.groupby('id_user')['label'].value_counts().unstack(fill_value=0)
+
+    for label in [0, 1, 2]:
+        if label not in label_counts.columns:
+            label_counts[label] = 0
+
+    label_counts = label_counts.reset_index().rename(columns={0: str(label_category[label_list[0]])+"_novice", 1: str(label_category[label_list[1]])+"_novice", 2: str(label_category[label_list[2]])+"_novice"})
+    users_df = users_df.merge(label_counts, left_on='id', right_on='id_user', how='left')
+    users_df["total_novice"] = users_df[str(label_category[label_list[0]])+"_novice"]+users_df[str(label_category[label_list[1]])+"_novice"]+users_df[str(label_category[label_list[2]])+"_novice"]
+
+    ####
+    ratings_df = ratings_df.sort_values(by=['id_user', 'date'])
+    ratings_grouped = ratings_df.groupby('id_user').apply(lambda group: group.iloc[user_level[0]:user_level[1]]).reset_index(drop=True)
+    label_counts = ratings_grouped.groupby('id_user')['label'].value_counts().unstack(fill_value=0)
+
+    for label in [0, 1, 2]:
+        if label not in label_counts.columns:
+            label_counts[label] = 0
+
+    label_counts = label_counts.reset_index().rename(columns={0: str(label_category[label_list[0]])+"_enthusiast", 1: str(label_category[label_list[1]])+"_enthusiast", 2: str(label_category[label_list[2]])+"_enthusiast"})
+    users_df = users_df.merge(label_counts, left_on='id', right_on='id_user', how='left')
+    users_df["total_enthusiast"] = users_df[str(label_category[label_list[0]])+"_enthusiast"]+users_df[str(label_category[label_list[1]])+"_enthusiast"]+users_df[str(label_category[label_list[2]])+"_enthusiast"]
+
+    ###
+    ratings_df = ratings_df.sort_values(by=['id_user', 'date'])
+    ratings_grouped = ratings_df.groupby('id_user').apply(lambda group: group.iloc[user_level[1]:]).reset_index(drop=True)
+    label_counts = ratings_grouped.groupby('id_user')['label'].value_counts().unstack(fill_value=0)
+
+    for label in [0, 1, 2]:
+        if label not in label_counts.columns:
+            label_counts[label] = 0
+
+    label_counts = label_counts.reset_index().rename(columns={0: str(label_category[label_list[0]])+"_connoisseur", 1: str(label_category[label_list[1]])+"_connoisseur", 2: str(label_category[label_list[2]])+"_connoisseur"})
+    users_df = users_df.merge(label_counts, left_on='id', right_on='id_user', how='left')
+    users_df["total_connoisseur"] = users_df[str(label_category[label_list[0]])+"_connoisseur"]+users_df[str(label_category[label_list[1]])+"_connoisseur"]+users_df[str(label_category[label_list[2]])+"_connoisseur"]
+
+    users_df = users_df.drop(columns = ['id_user_x','id_user_y','id_user'])
+
+    for label_val in label_list:
+        users_df[str(label_category[label_val])+"_novice"] = users_df[str(label_category[label_val])+"_novice"]/users_df["total_novice"]
+        users_df[str(label_category[label_val])+"_enthusiast"] = users_df[str(label_category[label_val])+"_enthusiast"]/users_df["total_enthusiast"]
+        users_df[str(label_category[label_val])+"_connoisseur"] = users_df[str(label_category[label_val])+"_connoisseur"]/users_df["total_connoisseur"]
+
+    plot_proportion_controversial_per_category_new(users_df)
+
+    del ratings_df, beers_df, users_df
+
+
+
+def plot_proportion_controversial_per_category_new(users_df):
+    proportions_df = pd.DataFrame({
+        'controversial': [
+            users_df['controversial_novice'].mean(),
+            users_df['controversial_enthusiast'].mean(),
+            users_df['controversial_connoisseur'].mean()
+        ],
+        'neutral': [
+            users_df['neutral_novice'].mean(),
+            users_df['neutral_enthusiast'].mean(),
+            users_df['neutral_connoisseur'].mean()
+        ],
+        'universal': [
+            users_df['universal_novice'].mean(),
+            users_df['universal_enthusiast'].mean(),
+            users_df['universal_connoisseur'].mean()
+        ]
+    }, index=['novice', 'enthusiast', 'connoisseur'])
+
+    std_errors = pd.DataFrame({
+        'controversial': [
+            users_df['controversial_novice'].sem(),
+            users_df['controversial_enthusiast'].sem(),
+            users_df['controversial_connoisseur'].sem()
+        ],
+        'neutral': [
+            users_df['neutral_novice'].sem(),
+            users_df['neutral_enthusiast'].sem(),
+            users_df['neutral_connoisseur'].sem()
+        ],
+        'universal': [
+            users_df['universal_novice'].sem(),
+            users_df['universal_enthusiast'].sem(),
+            users_df['universal_connoisseur'].sem()
+        ]
+    }, index=['novice', 'enthusiast', 'connoisseur'])
+
+    ci_upper = proportions_df + 1.96 * std_errors
+    ci_lower = proportions_df - 1.96 * std_errors
+
+    barWidth = 0.25
+    r1 = np.arange(len(proportions_df)) - barWidth
+    r2 = np.arange(len(proportions_df))
+    r3 = np.arange(len(proportions_df)) + barWidth
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.bar(r1, proportions_df['controversial'], 
+           yerr=1.96 * std_errors['controversial'], capsize=5, width=barWidth, label='Controversial')
+    ax.bar(r2, proportions_df['neutral'], 
+           yerr=1.96 * std_errors['neutral'], capsize=5, width=barWidth, label='Neutral')
+    ax.bar(r3, proportions_df['universal'], 
+           yerr=1.96 * std_errors['universal'], capsize=5, width=barWidth, label='Universal')
+    ax.set_xticks([r + barWidth for r in range(len(proportions_df))])
+    ax.set_xticklabels(proportions_df.index)
+    ax.set_ylabel('Proportion')
+    ax.set_xlabel('Rating User Level')
+    ax.set_title('Proportion of Labels by Rating User Level with 95% CI')
+    ax.legend(title='Label Category', bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    plt.show()
