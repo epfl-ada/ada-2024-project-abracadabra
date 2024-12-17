@@ -282,7 +282,7 @@ def filter_ratings(ratings_df, threshold, attributes, verbose=True):
 #     return df_filtered
 
 
-def plot_threshold_filtering(ratings_df, thresholds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 80, 100, 200], verbose = False):
+def plot_threshold_filtering(ratings_df, thresholds = [0,5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 80, 100, 200], verbose = False):
     '''
     Plot the remaining percentager of ratings and beers as a function of threshold filtering value
     Percentage is compared to ratings and beers without nan values and at least one rating

@@ -44,7 +44,7 @@ def draw_map(countries_Beers_labelled,title, column_for_plot = 'frequency', min_
     if min_ ==0:
         world.plot(column=column_for_plot, cmap='OrRd', legend=True,legend_kwds={'label': label},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax, vmin = min_, vmax = 1)
     if min_ == -1:
-        world.plot(column=column_for_plot, cmap='seismic', legend=True,legend_kwds={'label': label},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax, vmin = min_,vmax = 1)
+        world.plot(column=column_for_plot, cmap='coolwarm', legend=True,legend_kwds={'label': label},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax, vmin = min_,vmax = 1)
     ax.set_title(title, fontsize=16)
     plt.show()
 
