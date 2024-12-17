@@ -93,7 +93,7 @@ def single_plot(ratings_df, label_list = [2,0,1]):
 
 def compute_rating_by_user_time(ratings_df, users_df, beers_df, label, label_list = [2,0,1], user_level = [20,800]):
     #We need ratings_df cause it has the dates, therefore we must also redrop all the nan
-    label_category = ['universal','neutral', 'controversial']
+    label_category = ['neutral','controversial', 'universal']
     
     ratings_df = ratings_df[['id_user','id_beer','date']].copy(deep = True)
     users_df = users_df[['id','rating_user_level']].copy(deep = True)
