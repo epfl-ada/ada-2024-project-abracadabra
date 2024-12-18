@@ -91,6 +91,5 @@ def compute_score_for_controversial_sum(users_df):
     users_df['frequency_labelled_same_country'] = users_df.nbr_ratings_labelled_matched_same/users_df.nbr_ratings_same_country
     users_df['frequency_labelled_other_country'] = users_df.nbr_ratings_labelled_matched_other/users_df.nbr_ratings_other_country
     users_df['score'] = users_df['frequency_labelled_same_country']-users_df['frequency_labelled_other_country']
-    print("Min score", users_df.score.min(),"Max score", users_df.score.max())
     print(users_df.score.describe())
     return users_df

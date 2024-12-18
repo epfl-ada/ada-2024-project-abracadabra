@@ -91,7 +91,7 @@ def single_plot(ratings_df, label_list = [2,0,1]):
     plt.show()
 
 
-def compute_rating_by_user_time(ratings_df, users_df, beers_df, label, label_list = [2,0,1], user_level = [20,800]):
+def compute_rating_by_user_time(ratings_df, users_df, beers_df, label, label_list = [1,2,0], user_level = [20,800]):
     #We need ratings_df cause it has the dates, therefore we must also redrop all the nan
     label_category = ['neutral','controversial', 'universal']
     
