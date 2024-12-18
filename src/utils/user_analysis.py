@@ -92,17 +92,32 @@ def single_plot(ratings_df, label_list = [2,0,1]):
 
 
 def compute_rating_by_user_time(ratings_df, users_df, beers_df, label, label_list = [1,2,0], user_level = [20,800]):
+    '''
+    Computes the proportion of ratings made by the different class of users: [novice, enthusiast, connoisseur]. Uses the time information to classify the users through time
+    
+    Parameters :
+    - ratings_df: Dataframe containing the ratings
+    - user_df: DataFrame containing user data.
+    - beers_df: DataFrame containing user data.
+    - label attributed by the GMM clustering
+    - label_list: list to tell us which label corresponds to which class for the 1st GMM
+    - user_level: limit set to decide when a users becomes enthusiast and connoisseur default is at 20 and 800 ratings
+
+    '''
     #We need ratings_df cause it has the dates, therefore we must also redrop all the nan
     label_category = ['neutral','controversial', 'universal']
     
+    #Deep copy and keep only usefull data
     ratings_df = ratings_df[['id_user','id_beer','date']].copy(deep = True)
     users_df = users_df[['id','rating_user_level']].copy(deep = True)
     beers_df = beers_df.copy(deep = True)
 
+    #Add labels to comment + keep only the ratings without any label
     ratings_df = add_label_to_comment(ratings_df=ratings_df, beers_df=beers_df, labels = label)
     ratings_df= ratings_df[~ratings_df.label.isna()]
-    ratings_df = ratings_df[ratings_df.id_user.isin(users_df.id)]#Normalement j'ai pas besoin de cette ligne...
+    ratings_df = ratings_df[ratings_df.id_user.isin(users_df.id)]
 
+    #Group the 1st 25 ratings for each user
     ratings_df = ratings_df.sort_values(by=['id_user', 'date'])
     ratings_grouped = ratings_df.groupby('id_user').head(user_level[0])
     label_counts = ratings_grouped.groupby('id_user')['label'].value_counts().unstack(fill_value=0)
@@ -111,11 +126,12 @@ def compute_rating_by_user_time(ratings_df, users_df, beers_df, label, label_lis
         if label not in label_counts.columns:
             label_counts[label] = 0
 
+    #Compute the controversial, universal and neutral comments for the novice users
     label_counts = label_counts.reset_index().rename(columns={0: str(label_category[label_list[0]])+"_novice", 1: str(label_category[label_list[1]])+"_novice", 2: str(label_category[label_list[2]])+"_novice"})
     users_df = users_df.merge(label_counts, left_on='id', right_on='id_user', how='left')
     users_df["total_novice"] = users_df[str(label_category[label_list[0]])+"_novice"]+users_df[str(label_category[label_list[1]])+"_novice"]+users_df[str(label_category[label_list[2]])+"_novice"]
 
-    ####
+    #Group the 25 to 800 ratings for each user
     ratings_df = ratings_df.sort_values(by=['id_user', 'date'])
     ratings_grouped = ratings_df.groupby('id_user').apply(lambda group: group.iloc[user_level[0]:user_level[1]]).reset_index(drop=True)
     label_counts = ratings_grouped.groupby('id_user')['label'].value_counts().unstack(fill_value=0)
@@ -124,11 +140,12 @@ def compute_rating_by_user_time(ratings_df, users_df, beers_df, label, label_lis
         if label not in label_counts.columns:
             label_counts[label] = 0
 
+    #Compute stats for the enthusiast users
     label_counts = label_counts.reset_index().rename(columns={0: str(label_category[label_list[0]])+"_enthusiast", 1: str(label_category[label_list[1]])+"_enthusiast", 2: str(label_category[label_list[2]])+"_enthusiast"})
     users_df = users_df.merge(label_counts, left_on='id', right_on='id_user', how='left')
     users_df["total_enthusiast"] = users_df[str(label_category[label_list[0]])+"_enthusiast"]+users_df[str(label_category[label_list[1]])+"_enthusiast"]+users_df[str(label_category[label_list[2]])+"_enthusiast"]
 
-    ###
+    #Group last 800 ratings for each user
     ratings_df = ratings_df.sort_values(by=['id_user', 'date'])
     ratings_grouped = ratings_df.groupby('id_user').apply(lambda group: group.iloc[user_level[1]:]).reset_index(drop=True)
     label_counts = ratings_grouped.groupby('id_user')['label'].value_counts().unstack(fill_value=0)
@@ -137,12 +154,14 @@ def compute_rating_by_user_time(ratings_df, users_df, beers_df, label, label_lis
         if label not in label_counts.columns:
             label_counts[label] = 0
 
+    #Compute stats for the connoisseur users
     label_counts = label_counts.reset_index().rename(columns={0: str(label_category[label_list[0]])+"_connoisseur", 1: str(label_category[label_list[1]])+"_connoisseur", 2: str(label_category[label_list[2]])+"_connoisseur"})
     users_df = users_df.merge(label_counts, left_on='id', right_on='id_user', how='left')
     users_df["total_connoisseur"] = users_df[str(label_category[label_list[0]])+"_connoisseur"]+users_df[str(label_category[label_list[1]])+"_connoisseur"]+users_df[str(label_category[label_list[2]])+"_connoisseur"]
 
     users_df = users_df.drop(columns = ['id_user_x','id_user_y','id_user'])
 
+    #Computes frequencies
     for label_val in label_list:
         users_df[str(label_category[label_val])+"_novice"] = users_df[str(label_category[label_val])+"_novice"]/users_df["total_novice"]
         users_df[str(label_category[label_val])+"_enthusiast"] = users_df[str(label_category[label_val])+"_enthusiast"]/users_df["total_enthusiast"]
@@ -155,6 +174,12 @@ def compute_rating_by_user_time(ratings_df, users_df, beers_df, label, label_lis
 
 
 def plot_proportion_controversial_per_category_new(users_df):
+    """
+    Bar plot of the proportion of labeled comments for each class of user
+    Parameters :
+    - users_df: User Dataframe with the proportions we need
+    """
+    #Compute the mean proportion
     proportions_df = pd.DataFrame({
         'controversial': [
             users_df['controversial_novice'].mean(),
@@ -173,6 +198,7 @@ def plot_proportion_controversial_per_category_new(users_df):
         ]
     }, index=['novice', 'enthusiast', 'connoisseur'])
 
+    #Compute the standard error for confidence intervals
     std_errors = pd.DataFrame({
         'controversial': [
             users_df['controversial_novice'].sem(),
@@ -191,14 +217,12 @@ def plot_proportion_controversial_per_category_new(users_df):
         ]
     }, index=['novice', 'enthusiast', 'connoisseur'])
 
-    ci_upper = proportions_df + 1.96 * std_errors
-    ci_lower = proportions_df - 1.96 * std_errors
-
     barWidth = 0.25
     r1 = np.arange(len(proportions_df)) - barWidth
     r2 = np.arange(len(proportions_df))
     r3 = np.arange(len(proportions_df)) + barWidth
 
+    #Plot the results
     fig, ax = plt.subplots(figsize=(8, 6))
     ax.bar(r1, proportions_df['controversial'], 
            yerr=1.96 * std_errors['controversial'], capsize=5, width=barWidth, label='Controversial')

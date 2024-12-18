@@ -762,6 +762,13 @@ def plot_var_boxplot(controv_df, univ_df):
     plt.show()
 
 def plot_histogram_nbr_ratings_total(users_df):
+    '''
+    Makes a plot of the distribution of the number of users per number of ratings made
+
+    Parameters :
+    - users_df: Dataframe with users data
+
+    '''
     #Uses the code of the Exercise 2: Becoming a DataVizard solution.ipynb
     array_1000 = plt.hist(users_df.nbr_ratings_total,bins=10000,log=True,histtype='step')
     plt.close()
