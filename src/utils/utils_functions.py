@@ -778,6 +778,8 @@ def plot_variance_evolution_batches(ratings_df,beers_df, attributes='rating'):
 
     batch_means.columns = ['mean_' + attributes, 'std_' + attributes]
 
+    batch_means.index = batch_means.index.astype(float) + 2.5
+
     plt.figure(figsize=(10, 6))
     
     # Plot mean
@@ -798,3 +800,56 @@ def plot_variance_evolution_batches(ratings_df,beers_df, attributes='rating'):
 
 
     del ratings_df, beers_df,batch_means
+
+def plot_variance_evolution_batches_barplot(ratings_df, beers_df, attributes='rating'):
+    ratings_df = ratings_df[[attributes, 'id', 'id_beer']].copy(deep=True)
+    beers_df = beers_df.copy(deep=True)
+
+    # Group by beer ID and calculate standard deviation and count
+    ratings_df = ratings_df.groupby('id_beer').agg({attributes: 'std', 'id': 'size'}).rename(columns={'id': 'number_ratings'})
+
+    # Bin the data into batches
+    batch_edges = np.arange(0, 205, 5)
+    ratings_df['batch'] = pd.cut(ratings_df['number_ratings'], bins=batch_edges, right=False, labels=batch_edges[:-1])
+    ratings_df = ratings_df.rename(columns={'batch': 'batched_number_of_ratings'})
+
+    # Group by batches and calculate mean and std for each batch
+    batch_means = ratings_df.groupby('batched_number_of_ratings').agg({attributes: ['mean', 'std']})
+    batch_means.columns = ['mean_' + attributes, 'std_' + attributes]
+
+    # Convert the batched index for plotting
+    batch_means = batch_means.reset_index()
+    batch_means['batched_number_of_ratings'] = batch_means['batched_number_of_ratings'].astype(float) + 2.5
+
+    # Bar plot
+    plt.figure(figsize=(12, 6))
+
+    # Std bar plot
+    x_positions = batch_means['batched_number_of_ratings']  # X positions for the bars
+
+    # Standard Deviation bar plot
+    plt.bar(
+        x_positions,  # Use x_positions for clarity
+        batch_means['std_' + attributes],
+        width=4,
+        color='green',
+        alpha=0.7,
+        label=f'Standard Deviation {attributes.capitalize()}',
+    )
+
+    # Add ticks at the center of bars for clarity
+    plt.xticks(x_positions, labels=x_positions, rotation=45)
+
+    # Formatting the plot
+    plt.title(f'Variance/Mean Evolution Over Batches ({attributes.capitalize()})')
+    plt.xlabel('Batch Number of Ratings')
+    plt.ylabel(f'{attributes.capitalize()}')
+    plt.legend()
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+
+    plt.show()
+
+
+    del ratings_df, beers_df,batch_means
+
