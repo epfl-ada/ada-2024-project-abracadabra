@@ -8,6 +8,20 @@ import pandas as pd
 import numpy as np
 
 def plot_distribution_rating_nbr(ratings_df, beer_df, labels, label_list):
+    '''
+    Plots the distribution of the number of ratings with the number/proportion of beers in each class
+
+    Parameters :
+    - ratings_df: Dataframe with the ratings of the different users
+    - beer_df: Dataframe of the beers
+    - labels: labels predicted by the GMM
+    - label_list: list to tell us which label corresponds to which class for the 1st GMM
+    The list should give the label which corresponds to the following:[universal, neutral, controversial]
+
+
+    Returns :
+    - grouped_df: Various statistics about the beers grouped by their number of ratings (in range)
+    '''
     ratings_df = ratings_df.copy(deep=True)
     ratings_df['labels'] = labels
     merged_df = ratings_df.merge(beer_df, left_index=True, right_on='id').drop(columns = ['id','appearance','aroma','palate','taste','overall'])
@@ -15,7 +29,16 @@ def plot_distribution_rating_nbr(ratings_df, beer_df, labels, label_list):
     return grouped_df
 
 def plot_three(merged_df, labels=[0, 1, 2]):
-    # Group by 'nbr_ratings' and calculate necessary statistics
+    '''
+    Makes a plot of the abv range with th evarious statistics computed previously
+
+    Parameters :
+    - merged_df: Dataframe with the number of ratings and the labels for the various beers
+    - labels: list to tell us which label corresponds to which class for the 1st GMM
+    The list should give the label which corresponds to the following:[universal, neutral, controversial]
+
+    '''
+    #Group by number of ratings and calculate necessary statistics
     grouped = merged_df.groupby('nbr_ratings').agg(
         total_count=('labels', 'size'),
         label_match_universal=('labels', lambda x: (x == labels[0]).sum()),
@@ -23,12 +46,12 @@ def plot_three(merged_df, labels=[0, 1, 2]):
         label_match_controversial=('labels', lambda x: (x == labels[2]).sum())
     ).reset_index()
 
-    # Calculate frequencies
+    #Compute frequencies
     grouped['frequency_universal'] = grouped['label_match_universal'] / grouped['total_count']
     grouped['frequency_neutral'] = grouped['label_match_neutral'] / grouped['total_count']
     grouped['frequency_controversial'] = grouped['label_match_controversial'] / grouped['total_count']
 
-    # Bin the 'nbr_ratings' column into ranges and group again
+    #Group by number of ratings ranges and compute statistics
     grouped['nbr_ratings_range'] = pd.cut(grouped['nbr_ratings'], bins=100)
     range_grouped = grouped.groupby('nbr_ratings_range').agg(
         nbr_ratings_mean=('nbr_ratings', 'mean'),
@@ -67,7 +90,6 @@ def plot_three(merged_df, labels=[0, 1, 2]):
     axes[1].set_yscale("log")
     axes[1].grid()
 
-    # Adjust x-axis labels for both subplots
     step = max(1, int(len(range_grouped) // 10))  # Adjust step size for readability
     axes[1].set_xticks(range(0, len(range_grouped), step))
     axes[1].set_xticklabels([f"{int(val)}" for val in range_grouped['nbr_ratings_mean'][::step]])

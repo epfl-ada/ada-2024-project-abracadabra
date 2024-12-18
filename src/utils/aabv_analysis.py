@@ -9,10 +9,26 @@ from plotly.subplots import make_subplots
 
 
 def plot_distribution_rating_abv(ratings_df, beer_df, labels, save = False, interactive = False, label_list=[2,0,1]):
+    '''
+    Plots the distribution of alcohol by volume (abv) wit the number/proportion of beers in each class
+
+    Parameters :
+    - ratings_df: Dataframe with the ratings of the different users
+    - beer_df: Dataframe of the beers
+    - labels: labels predicted by the GMM
+    - save: If we want to save the file
+    - interactive: If we want to plot the interactive plot
+    - label_list: list to tell us which label corresponds to which class for the 1st GMM
+    The list should give the label which corresponds to the following:[universal, neutral, controversial]
+
+
+    Returns :
+    - range_grouped: Various statistics about the beers grouped by their abv (in range)
+    '''
+    #Deep copy for security
     ratings_df = ratings_df.copy(deep=True)
-    ratings_df['labels'] = labels
+    ratings_df['labels'] = labels #Apply labels
     merged_df = ratings_df.merge(beer_df, left_index=True, right_on='id').drop(columns = ['id','appearance','aroma','palate','taste','overall'])
-    #plot_single(merged_df, label_of_interest)
     range_grouped = compute_range_grouped(merged_df, labels=label_list)
     if interactive:
         plot_three_interactive(range_grouped, save = save)
@@ -20,57 +36,29 @@ def plot_distribution_rating_abv(ratings_df, beer_df, labels, save = False, inte
         plot_three(range_grouped, save = save)
     return range_grouped
 
-def plot_single(merged_df, label_of_interest):
-    grouped = merged_df.groupby('abv').agg(total_count=('labels', 'size'),label_match_count=('labels', lambda x: (x == label_of_interest).sum())).reset_index()
-    grouped['frequency']=grouped['label_match_count']/grouped['total_count']
-
-    grouped['abv_range'] = pd.cut(grouped['abv'], bins=100)
-    
-    # Group by ABV range and aggregate frequencies
-    range_grouped = grouped.groupby('abv_range').agg(
-        avg_abv=('abv', 'mean'),
-        avg_frequency=('frequency', 'mean'),
-        total_beers=('total_count', 'sum')  # Sum of total beers for each ABV range
-    ).dropna().reset_index()
-    
-    # Plot with dual y-axes
-    fig, ax1 = plt.subplots(figsize=(10, 6))
-
-    # Plot frequency on the primary y-axis
-    sns.lineplot(data=range_grouped, x='avg_abv', y='avg_frequency', marker='o', ax=ax1, label='Frequency')
-    ax1.set_xlabel("ABV (Binned)")
-    ax1.set_ylabel("Frequency", color='tab:blue')
-    ax1.tick_params(axis='y', labelcolor='tab:blue')
-
-    # Plot total beers on the secondary y-axis
-    ax2 = ax1.twinx()
-    sns.barplot(data=range_grouped, x='avg_abv', y='total_beers', alpha=0.3, ax=ax2, color='gray', label='Total Beers')
-    ax2.set_ylabel("Total Beers", color='gray')
-    ax2.tick_params(axis='y', labelcolor='gray')
-
-    # Add titles and legends
-    ax1.set_title("Frequency of Label Matches by ABV with Beer Count in Background")
-    ax1.grid()
-    ax1.legend(loc='upper left')
-    ax2.legend(loc='upper right')
-
-    # Reduce the number of x-axis labels (ticks)
-    step = max(1, int(len(range_grouped) // 10))  # Adjust the step size to show roughly 10 labels
-    ax1.set_xticks(range(0, len(range_grouped), step))
-    ax1.set_xticklabels([f"{round(val, 2)}" for val in range_grouped['avg_abv'][::step]])
-
-    plt.tight_layout()
-    plt.show()
-
 def compute_range_grouped(merged_df, labels = [2,0,1]):
+    '''
+    Computes various statistics about the beers grouped by their abv range
+
+    Parameters :
+    - merged_df: Merged dataset of the beers abv with the label given to the beer
+    - labels: list to tell us which label corresponds to which class for the 1st GMM
+    The list should give the label which corresponds to the following:[universal, neutral, controversial]
+
+
+    Returns :
+    - range_grouped: Various statistics about the beers grouped by their abv
+    '''
+    #Group by abv and compute the various frequencies for each beer
     grouped = merged_df.groupby('abv').agg(total_count=('labels', 'size'),label_match_universal=('labels', lambda x: (x == labels[0]).sum()),label_match_neutral=('labels', lambda x: (x == labels[1]).sum()),label_match_controversial=('labels', lambda x: (x == labels[2]).sum())).reset_index()
     grouped['frequency_universal']=grouped['label_match_universal']/grouped['total_count']
     grouped['frequency_neutral']=grouped['label_match_neutral']/grouped['total_count']
     grouped['frequency_controversial']=grouped['label_match_controversial']/grouped['total_count']
 
+    #Cut to group by abv range
     grouped['abv_range'] = pd.cut(grouped['abv'], bins=100)
     
-    # Group by ABV range and aggregate frequencies
+    #Group by abv range and compute frequencies mean and sum of labeled beers
     range_grouped = grouped.groupby('abv_range').agg(
         avg_abv=('abv', 'mean'),
         avg_frequency_universal=('frequency_universal', 'mean'),
@@ -83,48 +71,20 @@ def compute_range_grouped(merged_df, labels = [2,0,1]):
     ).dropna().reset_index()
     
     return range_grouped
-    # Plot with dual y-axes
-
-    """
-    fig, ax1 = plt.subplots(figsize=(10, 6))
-
-    # Plot frequency on the primary y-axis
-    sns.lineplot(data=range_grouped, x='avg_abv', y='avg_frequency_neutral', marker='o', ax=ax1, label='Neutral Frequency', color='blue')
-    ax1.set_xlabel("ABV (Binned)")
-    ax1.set_ylabel("Frequency", color='tab:blue')
-    ax1.tick_params(axis='y', labelcolor='tab:blue')
-
-    sns.lineplot(data=range_grouped, x='avg_abv', y='avg_frequency_controversial', marker='o', ax=ax1, label='Controversial Frequency', color='red')
-
-    # Plot neutral frequency (in green)
-    sns.lineplot(data=range_grouped, x='avg_abv', y='avg_frequency_universal', marker='o', ax=ax1, label='Universal Frequency', color='green')
-
-    # Plot total beers on the secondary y-axis
-    ax2 = ax1.twinx()
-    sns.barplot(data=range_grouped, x='avg_abv', y='total_beers', alpha=0.3, ax=ax2, color='gray', label='Total Beers')
-    ax2.set_ylabel("Total Beers", color='gray')
-    ax2.tick_params(axis='y', labelcolor='gray')
-
-    # Add titles and legends
-    ax1.set_title("Frequency of Label Matches by ABV with Beer Count in Background")
-    ax1.grid()
-    ax1.legend(loc='upper left')
-    ax2.legend(loc='upper right')
-
-    # Reduce the number of x-axis labels (ticks)
-    step = max(1, int(len(range_grouped) // 10))  # Adjust the step size to show roughly 10 labels
-    ax1.set_xticks(range(0, len(range_grouped), step))
-    ax1.set_xticklabels([f"{round(val, 2)}" for val in range_grouped['avg_abv'][::step]])
-
-    plt.tight_layout()
-    plt.show()
-    """
 
 def plot_three(range_grouped, save = False):
-# Create the figure with two subplots
+    '''
+    Makes a plot of the abv range with th evarious statistics computed previously
+
+    Parameters :
+    - range_grouped: Dataframe with the abv range and their statistics
+    - save: if we save or not the generated image under HTML format
+
+    '''
+    #Create figure with subplots
     fig, axes = plt.subplots(2, 1, figsize=(12, 10), sharex=True)
 
-    # Subplot 1: Line plots for frequencies
+    #Subplot 1: Line plots for the frequencies
     sns.lineplot(data=range_grouped, x='avg_abv', y='avg_frequency_neutral', marker='o', ax=axes[0], label='Neutral Frequency', color='blue')
     sns.lineplot(data=range_grouped, x='avg_abv', y='avg_frequency_controversial', marker='o', ax=axes[0], label='Controversial Frequency', color='red')
     sns.lineplot(data=range_grouped, x='avg_abv', y='avg_frequency_universal', marker='o', ax=axes[0], label='Universal Frequency', color='green')
@@ -134,7 +94,7 @@ def plot_three(range_grouped, save = False):
     axes[0].grid()
 
 
-    # Subplot 2: Stacked bar plot for total beers by category
+    #Subplot 2: Stacked bar plot for total beers by category
     x = range(len(range_grouped['avg_abv']))
     axes[1].bar(x, range_grouped['total_beers_neutral'], label='Neutral Beers', color='blue', alpha=0.7)
     axes[1].bar(x, range_grouped['total_beers_controversial'], bottom=range_grouped['total_beers_neutral'], label='Controversial Beers', color='red', alpha=0.7)
@@ -154,8 +114,8 @@ def plot_three(range_grouped, save = False):
     axes[1].legend()
     axes[1].grid()
 
-    # Add x-axis labels for avg_abv
-    step = max(1, int(len(range_grouped) // 10))  # Adjust step size for readability
+    #Add x-axis labels for avg_abv
+    step = max(1, int(len(range_grouped) // 10))
     x_ticks = range(0, len(range_grouped), step)
     axes[1].set_xticks(x_ticks)
     axes[1].set_xticklabels([f"{round(val, 2)}" for val in range_grouped['avg_abv'][::step]])
@@ -163,23 +123,32 @@ def plot_three(range_grouped, save = False):
     plt.tight_layout()
     plt.show()
 
+    #If we want to save or not the file as HTML format
     if save:
         html_path = "aabv_plot.html"
         mpld3.save_html(fig, html_path)
 
 def plot_three_interactive(range_grouped, save=False):
-    # Convert `x` values from range to a list
+    '''
+    Makes an interactive plot of the abv range with th evarious statistics computed previously
+
+    Parameters :
+    - range_grouped: Dataframe with the abv range and their statistics
+    - save: if we save or not the generated image under HTML format
+
+    '''
+    #Convert to list
     x_values = list(range(len(range_grouped['avg_abv'])))
 
-    # Create subplots: 2 rows and 1 column
+    #Create subplots: 2 rows and 1 column
     fig = make_subplots(
         rows=2, cols=1,
         shared_xaxes=True,
-        vertical_spacing=0.1,  # Adjust spacing between plots
+        vertical_spacing=0.1,
         subplot_titles=("Frequency of Label Matches by ABV", "Total Beers by Category and ABV (Stacked)")
     )
 
-    # Subplot 1: Line plots for frequencies
+    #Subplot 1: line plot for the frequencies
     fig.add_trace(go.Scatter(
         x=range_grouped['avg_abv'], 
         y=range_grouped['avg_frequency_neutral'],
@@ -208,55 +177,49 @@ def plot_three_interactive(range_grouped, save=False):
         hoverinfo='x+y+name'
     ), row=1, col=1)
 
-    # Subplot 2: Stacked bar plot for total beers by category
+    #Subplot 2: Stacked bar plot for the total beers by category
     fig.add_trace(go.Bar(
-        x=x_values,  # Use the converted list for x values
+        x=x_values,
         y=range_grouped['total_beers_neutral'],
         name='Neutral Beers',
         marker=dict(color='blue'),
         hoverinfo='x+y+name'
     ), row=2, col=1)
     fig.add_trace(go.Bar(
-        x=x_values,  # Use the converted list for x values
+        x=x_values,
         y=range_grouped['total_beers_controversial'],
         name='Controversial Beers',
         marker=dict(color='red'),
         hoverinfo='x+y+name',
-        base=range_grouped['total_beers_neutral']  # Stack on top of neutral beers
+        base=range_grouped['total_beers_neutral']
     ), row=2, col=1)
     fig.add_trace(go.Bar(
-        x=x_values,  # Use the converted list for x values
+        x=x_values,
         y=range_grouped['total_beers_universal'],
         name='Universal Beers',
         marker=dict(color='green'),
         hoverinfo='x+y+name',
-        base=range_grouped['total_beers_neutral'] + range_grouped['total_beers_controversial']  # Stack on top of neutral + controversial beers
+        base=range_grouped['total_beers_neutral'] + range_grouped['total_beers_controversial']
     ), row=2, col=1)
 
-    # Update layout for the entire figure
+    #Update layout for the figure
     fig.update_layout(
-        height=800,  # Adjust height to fit both subplots
+        height=800,
         title="Frequency and Total Beers by ABV",
         xaxis_title="ABV (Average)",
         barmode='stack',
         legend_title="Legend",
-        hovermode="x unified",  # Unified hover across traces
+        hovermode="x unified",
         template="plotly_white"
     )
 
-    # Update subplot-specific axes
     fig.update_yaxes(title_text="Frequency", row=1, col=1)
     fig.update_yaxes(title_text="Total Beers", row=2, col=1)
 
-    # Save the plot as an interactive HTML file
+    #Save plot as HTML file
     if save:
         html_path = "aabv_plot.html"
         fig.write_html(html_path)
         print(f"Interactive plot saved as {html_path}")
 
-    # Show the interactive plot in the notebook or browser
     fig.show()
-
-# Example usage:
-# range_grouped = pd.DataFrame(...)  # Replace with your DataFrame
-# plot_three_interactive(range_grouped, save=True)

@@ -20,6 +20,7 @@ def recompute_grade(df, min_grade_value=1, max_grade_value=5, attributes_of_inte
     - df: DataFrame containing user data.
     - min_grade_value: minimal grade wanted.
     - max_grade_value : maximal grade wanted.
+    - attributes_of_interest: attributes over which which should recompute the grades
 
     Returns :
     - DataFrame with grades on new scale. 
@@ -185,10 +186,13 @@ def filter_ratings_new(ratings_df, beers_df, breweries_df, users_df, threshold, 
     - beers_df: DataFrame containing only the beers remaining after filetering
     '''
 
+    #Deep copies just to ensure we do not change the datasets of origin
     ratings_df = ratings_df.copy(deep = True)
     beers_df = beers_df.copy(deep=True)
     breweries_df = breweries_df.copy(deep = True)
     users_df = users_df.copy(deep = True)
+
+    #Computes length of origin for future computation
     init_length_ratings = len(ratings_df)
     init_length_beers = len(beers_df)
     init_length_brew = len(breweries_df)
@@ -203,6 +207,7 @@ def filter_ratings_new(ratings_df, beers_df, breweries_df, users_df, threshold, 
     beer_remaining = df_filtered.groupby('id_beer').size()
     df_filtered = df_filtered[df_filtered['id_beer'].isin(beer_remaining.index)]
     
+    #Filters the remaining beers, breweries and users. Recomputes the true number of ratings just to ensure they are correct
     beers_df = beers_df[beers_df['id'].isin(beer_remaining.index)]
     beers_df.loc[:, 'true_number_ratings'] = beers_df['id'].map(beer_remaining)
 
@@ -227,7 +232,8 @@ def filter_ratings_new(ratings_df, beers_df, breweries_df, users_df, threshold, 
         print(
         "Percentage of users remaining after dropping ratings with nan values in selected attributes: {:.2f} %".format(
             100 * len(users_df) / init_length_user))
-        
+    
+    #Computes the length for future puposes
     init_length_ratings_no_nan = len(df_filtered)
     init_length_beers_no_nan = len(beer_remaining)
     init_length_brew_no_nan = len(breweries_df)
@@ -261,7 +267,8 @@ def filter_ratings_new(ratings_df, beers_df, breweries_df, users_df, threshold, 
         print(
         "Percentage of users remaining after dropping beers with too few ratings from the nan-filtered dataset: {:.2f} %".format(
             100 * len(users_df) / init_length_user_no_nan))
-        
+    
+    #Rename and set as the new real number of ratings
     beers_df = beers_df.drop(columns='nbr_ratings').rename(columns={'true_number_ratings':'nbr_ratings'})
     breweries_df = breweries_df.drop(columns='nbr_beers').rename(columns={'true_number_beers':'nbr_beers'})
     users_df = users_df.drop(columns='nbr_ratings_total').rename(columns={'true_number_ratings':'nbr_ratings_total'})
@@ -476,16 +483,20 @@ def t_test_statistic(df, attributes_of_interest=['appearance', 'aroma', 'palate'
     - df: DataFrame containing the variance data
     - attributes_interest: Attributes we chose to analyse the variance from
     '''
+
+    #Initialize bunch of variables used to store the results
     p_value_table = np.zeros((len(attributes_of_interest), len(attributes_of_interest)))
     ci_table = np.zeros((len(attributes_of_interest), len(attributes_of_interest), 2))
     mean_value_mean = np.zeros((len(attributes_of_interest), len(attributes_of_interest)))
     annotations = np.empty(p_value_table.shape, dtype=object)
 
+    #Perform a double for loop to do the t test between the distribution of the various attributes
     for i, attribute1 in enumerate(attributes_of_interest):
         for j, attribute2 in enumerate(attributes_of_interest):
             attribute1_variance = df[attribute1]
             attribute2_variance = df[attribute2]
 
+            #Perform T test over the two attributes of the forloop
             ttest_result = ttest_ind(attribute1_variance, attribute2_variance)
             ci_t_test_result = ttest_result.confidence_interval(confidence_level=0.95)
             p_value_table[i, j] = ttest_result.pvalue
@@ -496,9 +507,9 @@ def t_test_statistic(df, attributes_of_interest=['appearance', 'aroma', 'palate'
 
     p_value_df = pd.DataFrame(p_value_table, index=attributes_of_interest, columns=attributes_of_interest)
 
+    #Plot results
     plt.figure(figsize=(8, 6))
     sns.heatmap(p_value_df, annot=True, cmap="Reds", vmin=0, vmax=1, square=True, cbar_kws={'label': 'P-Value'})
-
     plt.title("P-Value Heatmap for the T Test on the variance of the different attributes")
     plt.show()
 
@@ -678,13 +689,21 @@ def compute_variance_per_attribute(ratings_df, attributes_of_interest):
     return grouped_ratings[attributes_of_interest].var()
 
 def compute_stastics(ratings_df, attributes = ['aroma','palate','taste','overall','rating'], source = ['ad','rb']):
+    '''
+    Computes the statistics of the different attributes distribution
+
+    Parameters :
+    - ratings_df: DataFrame containing the ratings
+    - attributes: Attributes the function computes the statistics on
+    - source: The dataset to compute the statistic for  
+    '''
     stats = {}
     for dataset in source:
         stats[dataset] = {}
         new_ratings = ratings_df[ratings_df['dataset']==dataset]
         for attrib in attributes:
             data = new_ratings[attrib].dropna()
-            resolution = np.diff(np.sort(data.unique())).min()
+            resolution = np.diff(np.sort(data.unique())).min() #Computes the resolution of a grade
             stats[dataset][attrib] = {'min': data.min(), 'max': data.max(), 'median': data.median(), 'resolution': resolution}
 
     print(stats)
