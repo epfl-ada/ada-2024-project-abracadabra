@@ -866,8 +866,8 @@ def plot_variance_evolution_batches_barplot(ratings_df, beers_df, attributes='ra
         label=f'Standard Deviation {attributes.capitalize()}',
     )
     plt.xticks(x_positions, labels=x_positions, rotation=45)
-    plt.title(f'Variance/Mean Evolution Over Batches ({attributes.capitalize()})')
-    plt.xlabel('Batch Number of Ratings')
+    plt.title(f'Variance Evolution with the number of reviews ({attributes.capitalize()})')
+    plt.xlabel('Number of reviews')
     plt.ylabel(f'{attributes.capitalize()}')
     plt.legend()
     plt.grid(axis='y', linestyle='--', alpha=0.7)
