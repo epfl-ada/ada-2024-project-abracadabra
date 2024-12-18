@@ -12,7 +12,19 @@ import os
 
 
 def compute_proportion_label_per_country(breweries_df,beers_df, beers, labels, label_to_match, possible_labels = ['controversial','universal', 'neutral']):
+    '''
+    Plots the frequency of a labeled beer for the origin of the beer from different countries
     
+    Parameters :
+    - breweries_df: Dataframe containing the brewery data
+    - beers_df: Dataframe containing the beer data
+    - beers: Dataframe with the variance of the grades for each beer
+    - label: attributed by the GMM clustering
+    - label_to_match: the label to make the plot about
+    - possible labels: list to tell us which label corresponds to which class
+
+    '''
+    #Get brewery id and label for the beers
     beers['Label'] = labels
     beers = beers.merge(beers_df[['id', 'brewery_id']], left_on='id_beer', right_on='id', how='left')
 
@@ -22,8 +34,19 @@ def compute_proportion_label_per_country(breweries_df,beers_df, beers, labels, l
     draw_map(amount_beers_per_country_labelled[['location','frequency']],title = title, label = 'Proportion of beer per country', min_=0)
 
 def compute_number_beers_per_country(breweries_df, beers, label_to_match):
+    """
+    Computes the number of beers by country for a given label
+
+    Parameters :
+    - breweries_df: Dataframe containing the brewery data
+    - beers: Dataframe with the variance of the grades for each beer
+    - label_to_match: the label to make the plot about
+    """
+    #Compute number of label of interest by brewery
     beers_labeled = beers[beers['Label'] == label_to_match]
     label_counts = beers_labeled.groupby('brewery_id').size().reset_index(name='amount_of_labels')
+
+    #Compute frequency of the label by location
     breweries_df = breweries_df.merge(label_counts, how='left', left_on='id', right_on='brewery_id')
     breweries_df['amount_of_labels'] = breweries_df['amount_of_labels'].fillna(0).astype(int)
     breweries_df = breweries_df.drop(columns=['brewery_id'])
@@ -33,13 +56,26 @@ def compute_number_beers_per_country(breweries_df, beers, label_to_match):
     return breweries_df
 
 def draw_map(countries_Beers_labelled,title, column_for_plot = 'frequency', min_ = 0, label = "Proportion of Beers per Country"):
+    '''
+    Draw world map with frequency that interests us
+    
+    Parameters :
+    - countries_Beers_labelled: Dataframe with location and data to plot
+    - title: title of the plot
+    - column_for_plot: which column to use from countries_Beers_labelled
+    - min_: min value of the plot for the oclor bar
+    - label: label of the plot
+
+    '''
     current_directory = os.getcwd()
     shapefile_path = current_directory+ "/src/utils/data/ne_110m_admin_0_countries.shp"
 
+    #Load world map
     world = gpd.read_file(shapefile_path)
     world = world.merge(countries_Beers_labelled, how='left', left_on='NAME', right_on='location')
     world[column_for_plot] = world[column_for_plot].fillna(0)
 
+    #2 cases: plot between 0 :1 and -1:1. 
     fig, ax = plt.subplots(1, 1, figsize=(15, 10))
     if min_ ==0:
         world.plot(column=column_for_plot, cmap='OrRd', legend=True,legend_kwds={'label': label},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax, vmin = min_, vmax = 1)
@@ -48,18 +84,19 @@ def draw_map(countries_Beers_labelled,title, column_for_plot = 'frequency', min_
     ax.set_title(title, fontsize=16)
     plt.show()
 
-    unmatched_locations = countries_Beers_labelled[~countries_Beers_labelled['location'].isin(world['NAME'])]
-
-    """
-    print("Unmatched locations in countries_Beers_labelled:")
-    print("In total there are ", len(countries_Beers_labelled), "locations who have a beer in the end ",len(unmatched_locations),"did not match")
-    print(unmatched_locations)
-    """
-
-    unmatched_locations.to_csv('unmatched_locations.txt', index=False, sep='\t')
-    world['NAME'].to_csv('Countries on Map.txt', index=False, sep='\t')
+    #Uncomment if want information about te countries missing or not matched
+    #unmatched_locations = countries_Beers_labelled[~countries_Beers_labelled['location'].isin(world['NAME'])]
+    #unmatched_locations.to_csv('unmatched_locations.txt', index=False, sep='\t')
+    #world['NAME'].to_csv('Countries on Map.txt', index=False, sep='\t')
 
 def match_countries(breweries_df):
+    '''
+    Corrects the name of the countries to get the names needed for the plot to have the most accurate countries
+    
+    Parameters :
+    - breweries_df: DataFrame to correct the location from
+
+    '''
     countries = ["United States", "Canada", "United Kingdom", "Australia", "Germany", "Italy"]
 
     breweries_df['location'] = breweries_df['location'].fillna('Unknown')
@@ -87,19 +124,32 @@ def match_countries(breweries_df):
     return breweries_df
 
 def plot_distribution_number_ratings_per_country_of_origin_of_beer(beers_df, breweries_df_new, ratings_df, N = 100):
+    '''
+    Plots the distribution of the total number of ratings made for each country
+    
+    Parameters :
+    - beers_df: DataFrame containing beer data.
+    - breweries_df_new: DataFrame containing beer data.
+    - ratings_df: Dataframe containing the ratings
+    - N: the number of countries to show on the bar plot
+
+    '''
+    #Merge on beers (deepcopied) brewery location to know where they come from
     beers_df = beers_df.copy(deep = True)
     beers_df = beers_df.merge(breweries_df_new[['id', 'location']], left_on='brewery_id', right_on='id', how='left',suffixes=('', '_breweries')).drop(columns = 'id_breweries')
+    
+    #Compute the ratings per beer by location
     beers_df = correct_number_ratings_per_beers(beers_df,ratings_df)
     beers_df = match_countries(beers_df)
     beers_df = beers_df.groupby('location')['nbr_ratings'].sum()
-    #users_df.to_csv('locations_of_users.txt', index=True, sep='\t')
     
     beers_df = beers_df.sort_values(ascending=False).head(N)# if want 100 first coountires
 
     beers_df.index = beers_df.index.where(beers_df.index != 'nan', 'Unknown')
 
     title = 'Top ' +str(N) + ' Countries by Total Beers'
-    # Create the bar plot
+
+    #plot
     plt.figure(figsize=(16, 12))
     beers_df.plot(kind='bar', color='skyblue', edgecolor='black', width=0.8)
     plt.yscale('log')
@@ -112,6 +162,14 @@ def plot_distribution_number_ratings_per_country_of_origin_of_beer(beers_df, bre
     plt.show()
 
 def correct_number_ratings_per_beers(beers_df,ratings_df):
+    '''
+    Recomputes the correct number of ratings per beer just as a final check
+    
+    Parameters :
+    - beers_df: DataFrame containing beer data.
+    - ratings_df: Dataframe containing the ratings
+
+    '''
     beer_label_counts = ratings_df['id_beer'].value_counts()
 
     beers_df_corrected = beers_df.copy(deep = True)
