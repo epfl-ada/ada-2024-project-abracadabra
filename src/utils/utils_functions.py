@@ -782,9 +782,9 @@ def plot_histogram_nbr_ratings_total(users_df):
     plt.close()
 
     plt.loglog(array_1000[1][1:],array_1000[0])
-    plt.title('Distribution of Total Number of Ratings', fontsize=16)
+    plt.title('Distribution of Total Number of Ratings for a User', fontsize=16)
     plt.xlabel('Number of Ratings in logscale', fontsize=14)
-    plt.ylabel('Frequency in logscale', fontsize=14)
+    plt.ylabel('Number of Users in logscale', fontsize=14)
 
     plt.show()
 
