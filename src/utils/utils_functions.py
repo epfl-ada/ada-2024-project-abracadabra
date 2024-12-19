@@ -12,7 +12,7 @@ from itertools import combinations
 
 ### Used for Part 1:
 
-def recompute_grade(df, min_grade_value=1, max_grade_value=5, attributes_of_interest = ['appearance', 'aroma', 'palate', 'taste', 'overall', 'rating']):
+def recompute_grade(df, min_grade_value=1, max_grade_value=5, attributes_of_interest = ['appearance', 'aroma', 'palate', 'taste', 'overall']):
     '''
     Recomputes the grades for the different attributes.
     
@@ -54,7 +54,7 @@ def recompute_grade_with_sent(df, min_grade_value=1, max_grade_value=5):
     Returns :
     - DataFrame with grades on new scale. 
     '''
-    attributes_of_interest = ['appearance', 'aroma', 'palate', 'taste', 'overall', 'rating', 'sentiment_bert']
+    attributes_of_interest = ['appearance', 'aroma', 'palate', 'taste', 'overall', 'sentiment_bert']
     dataset = ['rb', 'ad']
 
     min_max_values = df[df['dataset'].isin(dataset)].groupby('dataset')[attributes_of_interest].agg(['min', 'max'])
@@ -124,7 +124,7 @@ def plot_category_distrib(df, category_column):
     plt.show()
 
 
-def PCA_plot(data, attributes_of_interest_PCA=['appearance', 'aroma', 'palate', 'taste', 'overall', 'rating']):
+def PCA_plot(data, attributes_of_interest_PCA=['appearance', 'aroma', 'palate', 'taste', 'overall']):
     '''
     Plots the PCA on the variance of the attributes of the beers, we reduce the dimensions on 2D.
     Also prints the aigenvalues and eigenvector.
@@ -233,7 +233,7 @@ def filter_ratings_new(ratings_df, beers_df, breweries_df, users_df, threshold, 
         "Percentage of users remaining after dropping ratings with nan values in selected attributes: {:.2f} %".format(
             100 * len(users_df) / init_length_user))
     
-    #Computes the length for future puposes
+    #Computes the length for future purposes
     init_length_ratings_no_nan = len(df_filtered)
     init_length_beers_no_nan = len(beer_remaining)
     init_length_brew_no_nan = len(breweries_df)
@@ -268,7 +268,7 @@ def filter_ratings_new(ratings_df, beers_df, breweries_df, users_df, threshold, 
         "Percentage of users remaining after dropping beers with too few ratings from the nan-filtered dataset: {:.2f} %".format(
             100 * len(users_df) / init_length_user_no_nan))
     
-    #Rename and set as the new real number of ratings
+    # Rename and set as the new real number of ratings
     beers_df = beers_df.drop(columns='nbr_ratings').rename(columns={'true_number_ratings':'nbr_ratings'})
     breweries_df = breweries_df.drop(columns='nbr_beers').rename(columns={'true_number_beers':'nbr_beers'})
     users_df = users_df.drop(columns='nbr_ratings_total').rename(columns={'true_number_ratings':'nbr_ratings_total'})
@@ -295,8 +295,12 @@ def filter_ratings(ratings_df, threshold, attributes, verbose=True):
     columns_to_keep = attributes + ['id_beer']
     df_filtered = ratings_df[columns_to_keep]
 
+
     # Dropping the rows with nan values
     df_filtered = df_filtered.dropna(subset=attributes, how='any')
+
+    nb_original_ratings_no_nan = len(df_filtered)
+    nb_original_beer_no_nan = len(df_filtered['id_beer'].unique())
 
     # Print percentage of beer dropped due to nan values in the ratings
     # print(
@@ -309,11 +313,14 @@ def filter_ratings(ratings_df, threshold, attributes, verbose=True):
     # Keep all ratings for which the beer has enough filtered ratings
     beer_remaining = valid_ratings_count[valid_ratings_count >= threshold]
     df_filtered = df_filtered[df_filtered['id_beer'].isin(beer_remaining.index)]
+    modified_nb_ratings = len(df_filtered)
+    modified_nb_beer = len(beer_remaining)
     if verbose:
         print(
-        "Percentage of ratings remaining after dropping rows with nan values and rating for which beer has less than {} valid ratings : {:.2f} %".format(
-            threshold,
-            100 * len(df_filtered) / len(ratings_df)))
+        "Percentage of ratings remaining : {:.2f} % and beers remaining : {:.2f} % after dropping rows with nan values and rating for which beer has less than {} valid ratings".format(
+            100 * modified_nb_ratings / nb_original_ratings_no_nan,
+            100 * modified_nb_beer/nb_original_beer_no_nan,
+            threshold))
 
     return df_filtered
 
@@ -325,7 +332,7 @@ def filter_ratings(ratings_df, threshold, attributes, verbose=True):
 #     return df_filtered
 
 
-def plot_threshold_filtering(ratings_df, thresholds = [0,5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 80, 100, 200], verbose = False):
+def plot_threshold_filtering(ratings_df, thresholds = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 80, 100, 200], verbose = False):
     '''
     Plot the remaining percentager of ratings and beers as a function of threshold filtering value
     Percentage is compared to ratings and beers without nan values and at least one rating
@@ -339,7 +346,7 @@ def plot_threshold_filtering(ratings_df, thresholds = [0,5, 10, 15, 20, 25, 30, 
     - None
     '''
     # Filtering nan and ensuring beers with at least one rating for percentage comparison purpose 
-    ratings_df = filter_ratings(ratings_df, 1, ['appearance', 'aroma', 'palate', 'taste','overall'], verbose=verbose)
+    ratings_df = filter_ratings(ratings_df, 1, ['appearance', 'aroma', 'palate', 'taste','overall'], verbose=False)
 
     values = []
 
@@ -354,6 +361,7 @@ def plot_threshold_filtering(ratings_df, thresholds = [0,5, 10, 15, 20, 25, 30, 
             'threshold': t, 
             'percentage_rating': 100*len(filtered_ratings)/original_nb_ratings, 
             'percentage_beer': 100*len(filtered_ratings['id_beer'].unique())/original_nb_beers})
+        #print("Percentage of beer remaining {} %".format(100*len(filtered_ratings['id_beer'].unique())/original_nb_beers))
 
     values_df = pd.DataFrame(values)
 
@@ -472,7 +480,7 @@ def classify_percentage_distribution(df, attributes_interest, attribute_labellin
     return [controv_rating_variance_attribute, univ_rating_variance_attribute]
 
 
-def t_test_statistic(df, attributes_of_interest=['appearance', 'aroma', 'palate', 'taste', 'overall', 'rating']):
+def t_test_statistic(df, attributes_of_interest=['appearance', 'aroma', 'palate', 'taste', 'overall']):
     '''
     This function performs a t test. We want to test the mean of the variance of the different attributes.
     The H0 hypothesis is that the true mean of the variance of a given attribute between the different bears are equal.
@@ -513,7 +521,7 @@ def t_test_statistic(df, attributes_of_interest=['appearance', 'aroma', 'palate'
     plt.title("P-Value Heatmap for the T Test on the variance of the different attributes")
     plt.show()
 
-def single_t_test_statistic_(df, attributes_of_interest=['appearance', 'aroma', 'palate', 'taste', 'overall', 'rating'], attribute_single = 'sentiment_bert'):
+def single_t_test_statistic_(df, attributes_of_interest=['appearance', 'aroma', 'palate', 'taste', 'overall'], attribute_single = 'sentiment_bert'):
     '''
     This function performs a t test. We want to test the mean of the variance of the different attributes.
     The H0 hypothesis is that the true mean of the variance of a given attribute between the different bears are equal.
@@ -688,7 +696,7 @@ def compute_variance_per_attribute(ratings_df, attributes_of_interest):
     grouped_ratings = ratings_df.groupby('id_beer')
     return grouped_ratings[attributes_of_interest].var()
 
-def compute_stastics(ratings_df, attributes = ['aroma','palate','taste','overall','rating'], source = ['ad','rb']):
+def compute_stastics(ratings_df, attributes = ['aroma','appearance', 'palate','taste','overall'], source = ['ad','rb']):
     '''
     Computes the statistics of the different attributes distribution
 
@@ -712,8 +720,8 @@ def plot_var_distrib_violin_grades(ratings_df):
     ratings_advocate = ratings_df[ratings_df['dataset']=='ad']
     ratings_ratebeer = ratings_df[ratings_df['dataset']=='rb']
 
-    ratings_advocate = ratings_advocate[['aroma','palate','taste','overall','appearance', 'rating']]
-    ratings_ratebeer = ratings_ratebeer[['aroma','palate','taste','overall','appearance', 'rating']]
+    ratings_advocate = ratings_advocate[['aroma','appearance', 'palate','taste','overall','appearance']]
+    ratings_ratebeer = ratings_ratebeer[['aroma','appearance', 'palate','taste','overall','appearance']]
 
     sns.violinplot(ratings_ratebeer)
     plt.title("Distribution of grades across various attributes on the ratebeer dataset")
@@ -825,7 +833,7 @@ def plot_threshold_variance_variation_with_sent(ratings_df):
     plt.tight_layout()
     plt.show()
 
-def plot_variance_evolution_batches_barplot(ratings_df, beers_df, attributes='rating'):
+def plot_variance_evolution_batches_barplot(ratings_df, beers_df, attributes=('overall')):
     '''
     Plots the evolution of the standard deviation of the variance of the beer ratings which are batched together depending on the number of ratings for a beer. 
 
