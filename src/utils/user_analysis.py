@@ -91,6 +91,56 @@ def single_plot(ratings_df, label_list = [2,0,1]):
     plt.show()
 
 
+def classify_user_rating_level(user_df, enthusiasts_level=20, connoisseur_level=100):
+    '''
+    Classify users into different rating levels based on the number of ratings they have provided in both webistes.
+    
+    Parameters :
+    - user_df: DataFrame containing user data.
+    - enthusiasts_level: Threshold for the number of ratings required to classify a user as 'enthusiasts' (default is 20).
+    - connoisseur_level : Threshold for the number of ratings required to classify a user as 'connsoisseur' (default is 100).
+
+    Returns :
+    - DataFrame with an additional column 'rating_level' indicating the lever of rating of the user. 
+    '''
+
+    # Helper function to classify based on the number of ratings
+    def __classify(nbr_ratings):
+        if nbr_ratings <= enthusiasts_level:
+            return 'novice'
+        elif nbr_ratings <= connoisseur_level:
+            return 'enthusiast'
+        else:
+            return 'connoisseur'
+
+    # Apply classification to each user (each row of the DataFrame) based on their number of ratings
+    user_df['rating_user_level'] = user_df['nbr_ratings_total'].apply(__classify)
+
+    return user_df
+
+
+def plot_user_expertise_distrib(df):
+    """
+        Plot the distribution of the expertise level of the users.
+        
+        Parameters:
+        - df: users dataFrame
+    """
+
+    # Set up a small figure plot
+    plt.figure(figsize=(6, 4))
+
+    # Use seaborn countplot to plot the distribution
+    sns.countplot(data=df, x='rating_user_level', palette='magma')
+
+    # Add titles and labels
+    plt.title(f'Distribution of users level of expertise')
+    plt.xlabel('User expertise level')
+    plt.ylabel('Count')
+
+    plt.show()
+
+
 def compute_rating_by_user_time(ratings_df, users_df, beers_df, label, label_list = [1,2,0], user_level = [20,800]):
     '''
     Computes the proportion of ratings made by the different class of users: [novice, enthusiast, connoisseur]. Uses the time information to classify the users through time
@@ -114,7 +164,7 @@ def compute_rating_by_user_time(ratings_df, users_df, beers_df, label, label_lis
 
     #Add labels to comment + keep only the ratings without any label
     ratings_df = add_label_to_comment(ratings_df=ratings_df, beers_df=beers_df, labels = label)
-    ratings_df= ratings_df[~ratings_df.label.isna()]
+    ratings_df = ratings_df[~ratings_df.label.isna()]
     ratings_df = ratings_df[ratings_df.id_user.isin(users_df.id)]
 
     #Group the 1st 25 ratings for each user
