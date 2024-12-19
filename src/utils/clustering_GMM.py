@@ -146,9 +146,9 @@ def compare_two_clustering(attributes_variance, attributes_variance_sent, labels
     for label in labels_name:
         sub_frame = common_beer_ids[common_beer_ids.label_with_sent_name== label]
         sub_sub_frame = sub_frame[sub_frame.label_without_sent_name==label]
-        print("-", len(sub_frame),"beers are labeled as", label, "when clustered with sentiment. In this we have", 100*len(sub_sub_frame)/len(sub_frame), "% of the beers without sentiment that have the same label.",)
+        print("-", len(sub_frame),"beers are labeled as", label, "when clustered with sentiment. Containing", 100*len(sub_sub_frame)/len(sub_frame), "% of the beers without sentiment that have the same label.",)
 
     for label in labels_name:
         sub_frame = common_beer_ids[common_beer_ids.label_without_sent_name== label]
         sub_sub_frame = sub_frame[sub_frame.label_with_sent_name==label]
-        print("-", len(sub_frame),"beers are labeled as", label, "when clustered without sentiment. In this we have", 100*len(sub_sub_frame)/len(sub_frame), "% of the beers with sentiment that have the same label.",)
+        print("-", len(sub_frame),"beers are labeled as", label, "when clustered without sentiment. Containing", 100*len(sub_sub_frame)/len(sub_frame), "% of the beers with sentiment that have the same label.",)
