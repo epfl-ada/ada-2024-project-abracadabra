@@ -316,7 +316,7 @@ def plot_threshold_filtering(ratings_df, thresholds = [1, 5, 10, 15, 20, 25, 30,
     fig, ax1 = plt.subplots(figsize=(10, 6))
 
     ax1.set_xlabel('Threshold')
-    ax1.set_title('Effect of Threshold on Ratings and Beers Filtering')
+    ax1.set_title('Effect of threshold on ratings and beers filtering')
     ax1.grid(True)
 
     # Plot remaining ratings
@@ -465,7 +465,7 @@ def t_test_statistic(df, attributes_of_interest=['appearance', 'aroma', 'palate'
     #Plot results
     plt.figure(figsize=(8, 6))
     sns.heatmap(p_value_df, annot=True, cmap="Reds", vmin=0, vmax=1, square=True, cbar_kws={'label': 'P-Value'})
-    plt.title("P-Value Heatmap for the T Test on the variance of the different attributes")
+    plt.title("P-Value heatmap for the T Test on the variance of the different attributes")
     plt.show()
 
 def single_t_test_statistic_(df, attributes_of_interest=['appearance', 'aroma', 'palate', 'taste', 'overall'], attribute_single = 'sentiment_bert'):
@@ -556,9 +556,9 @@ def plot_sentiment_similarities(df, exact_similarity_columns, plus_minus_1_simil
 
     plt.figure(figsize=(10, 6))
     ax1 = df[exact_similarity_columns].sum().plot(kind='bar', color='skyblue')
-    plt.title('Exact Similarity Scores Between Pairs of Models')
-    plt.ylabel('Number of Matches')
-    plt.xlabel('Model Pair')
+    plt.title('Exact similarity scores between pairs of models')
+    plt.ylabel('Number of matches')
+    plt.xlabel('Model pair')
     plt.xticks(rotation=45)
 
     for i, value in enumerate(df[exact_similarity_columns].sum()):
@@ -568,9 +568,9 @@ def plot_sentiment_similarities(df, exact_similarity_columns, plus_minus_1_simil
 
     plt.figure(figsize=(10, 6))
     ax2 = df[plus_minus_1_similarity_columns].sum().plot(kind='bar', color='lightcoral')
-    plt.title('±1 Similarity Scores Between Pairs of Models')
-    plt.ylabel('Number of Matches')
-    plt.xlabel('Model Pair')
+    plt.title('±1 Similarity scores between pairs of models')
+    plt.ylabel('Number of matches')
+    plt.xlabel('Model pair')
     plt.xticks(rotation=45)
 
     for i, value in enumerate(df[plus_minus_1_similarity_columns].sum()):
@@ -619,7 +619,7 @@ def compute_correlation(df_variances, attribute_corr):
     correlations = df_variances.corr()[attribute_corr[0]]
     return correlations.drop(attribute_corr)
 
-def plot_correlation(correlations, title= 'Correlation of attributes variances with Overall Variance'):
+def plot_correlation(correlations, title= 'Correlation of attributes variances with Overall variance'):
     # Plot the correlation
     plt.figure(figsize=(8, 6))
     correlations.plot(kind='bar', color=['blue' if c > 0 else 'red' for c in correlations])
@@ -729,7 +729,7 @@ def plot_histogram_nbr_ratings_total(users_df):
     plt.close()
 
     plt.loglog(array_1000[1][1:],array_1000[0])
-    plt.title('Distribution of Total Number of Ratings for a User', fontsize=16)
+    plt.title('Distribution of total number of ratings for a user', fontsize=16)
     plt.xlabel('Number of Ratings in logscale', fontsize=14)
     plt.ylabel('Number of Users in logscale', fontsize=14)
 
@@ -820,7 +820,7 @@ def plot_variance_evolution_batches_barplot(ratings_df, beers_df, attributes=('o
         label=f'Standard Deviation {attributes.capitalize()}',
     )
     plt.xticks(x_positions, labels=x_positions, rotation=45)
-    plt.title(f'Variance Evolution with the number of reviews ({attributes.capitalize()})')
+    plt.title(f'Variance evolution with the number of reviews on the {attributes.capitalize()} attribute')
     plt.xlabel('Number of reviews')
     plt.ylabel(f'{attributes.capitalize()}')
     plt.legend()

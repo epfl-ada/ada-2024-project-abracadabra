@@ -148,7 +148,7 @@ def plot_distribution_number_ratings_per_country_of_origin_of_beer(beers_df, bre
 
     beers_df.index = beers_df.index.where(beers_df.index != 'nan', 'Unknown')
 
-    title = 'Top ' +str(N) + ' Countries by Total Beers'
+    title = 'Top ' +str(N) + ' countries by total beers'
 
     #plot
     plt.figure(figsize=(16, 12))
@@ -156,7 +156,7 @@ def plot_distribution_number_ratings_per_country_of_origin_of_beer(beers_df, bre
     plt.yscale('log')
     plt.title(title, fontsize=16)
     plt.xlabel('Country')
-    plt.ylabel('Total Beers')
+    plt.ylabel('Total beers')
     plt.xticks(rotation=45, ha='right', fontsize=10)
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     plt.tight_layout()

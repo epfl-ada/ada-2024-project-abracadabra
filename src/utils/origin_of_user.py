@@ -22,7 +22,7 @@ def plot_distribution_number_ratings_per_country_of_origin_of_user(users_df, rat
 
     users_df.index = users_df.index.where(users_df.index != 'nan', 'Unknown')
 
-    title = 'Top ' +str(N) + ' Countries by Total Ratings'
+    title = 'Top ' +str(N) + ' countries by total ratings'
 
     #Plot
     plt.figure(figsize=(16, 12))
@@ -30,7 +30,7 @@ def plot_distribution_number_ratings_per_country_of_origin_of_user(users_df, rat
     plt.yscale('log')
     plt.title(title, fontsize=16)
     plt.xlabel('Country')
-    plt.ylabel('Total Ratings')
+    plt.ylabel('Total ratings')
     plt.xticks(rotation=45, ha='right', fontsize=10)
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     plt.tight_layout()

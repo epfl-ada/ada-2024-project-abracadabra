@@ -52,7 +52,7 @@ def visualize_gmm_all_dimensions(attributes, n_components_gmm = 3):
     #Plot the results with Seaborn
     palette = sns.color_palette("deep", n_components_gmm)
     sns.pairplot(attributes_df, hue='Label', diag_kind='kde', palette=palette)
-    plt.suptitle("Pairwise Plots of Scaled Attributes by GMM Labels", y=1.02)
+    plt.suptitle("Cluster visualization on the standardized variance attributes using a GMM", y=1.02)
     plt.show()
 
     return labels
@@ -83,7 +83,7 @@ def plot_nll(attributes, min=2, max=10):
     plt.plot(nll.k, nll.nll, marker="o")
     plt.xlabel("Number of clusters")
     plt.ylabel("Negative Log-Likelihood")
-    plt.title("Evaluation of the Gaussian Mixture Model for various number of clusters")
+    plt.title("Evaluation of the GMM for various number of clusters")
     plt.show()
 
 def print_label_statistics(labels):
