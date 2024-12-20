@@ -6,8 +6,9 @@ Some beers provoke strong and diverse opinions, while others receive more consis
 
 ## Research questions
 
-- How can we define and classify beer controversiality, and which numerical attributes best predict it? Can we use the textual review to enhance our classification?
-- Are there features explaining controversiality, and do they depend on the beer itself?
+- How can we define and classify beer controversiality?
+- Can we use the textual review to enhance our classification?
+- Are there features explaining controversiality?
 
 
 ## Methods
