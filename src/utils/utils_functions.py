@@ -832,3 +832,24 @@ def plot_variance_evolution_batches_barplot(ratings_df, beers_df, attributes=('o
 
     del ratings_df, beers_df,batch_means
 
+def plot_attribute_variance_distrib_per_label(variances_df, labels, label_list=[1, 2, 0]):
+    variances_df = variances_df.copy(deep=True)
+    variances_df['labels'] = labels  # Apply labels
+    class_name = ['Controversial', 'Universal', 'Neutral']
+
+    fig, axes = plt.subplots(nrows=1, ncols=len(label_list), figsize=(16, 6), sharey=True)
+    for i, label in enumerate(label_list):
+        variances_grouped = variances_df[variances_df.labels == label]
+        variances_grouped.drop(columns=['labels'], inplace=True)  # Drop the labels column for plotting
+
+        # Create a boxplot for each attribute
+        sns.boxplot(variances_grouped, ax=axes[i], )
+        #variances_grouped.boxplot(ax=axes[i])
+        axes[i].set_title(f"Label : {class_name[label]}")
+        axes[i].set_xlabel("Attributes")
+        axes[i].set_ylabel("Variance" if i == 0 else '')  # Show ylabel only for the first subplot
+        axes[i].grid(visible=True, which='major', linestyle='--')
+    
+    plt.suptitle("Distribution of variances of the attributes for each class")
+    plt.tight_layout()
+    plt.show()
