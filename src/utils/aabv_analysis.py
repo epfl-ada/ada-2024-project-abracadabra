@@ -71,8 +71,70 @@ def compute_range_grouped(merged_df, labels = [2,0,1]):
     ).dropna().reset_index()
     
     return range_grouped
+def plot_three(range_grouped, save=False):
+    '''
+    Makes a plot of the abv range with the various statistics computed previously
 
-def plot_three(range_grouped, save = False):
+    Parameters:
+    - range_grouped: DataFrame with the abv range and their statistics
+    - save: if we save or not the generated image under HTML format
+    '''
+    # Convert avg_abv to numeric if needed
+    range_grouped['avg_abv'] = pd.to_numeric(range_grouped['avg_abv'], errors='coerce')
+
+    # Create figure with subplots
+    fig, axes = plt.subplots(2, 1, figsize=(12, 10), sharex=True)
+
+    # Subplot 1: Line plots for the frequencies
+    sns.lineplot(data=range_grouped, x='avg_abv', y='avg_frequency_neutral', marker='o', ax=axes[0], label='Neutral Frequency', color='blue')
+    sns.lineplot(data=range_grouped, x='avg_abv', y='avg_frequency_controversial', marker='o', ax=axes[0], label='Controversial Frequency', color='red')
+    sns.lineplot(data=range_grouped, x='avg_abv', y='avg_frequency_universal', marker='o', ax=axes[0], label='Universal Frequency', color='green')
+    axes[0].set_ylabel("Frequency")
+    axes[0].set_title("Frequency of Label Matches by ABV")
+    axes[0].legend()
+    axes[0].grid()
+
+    # Subplot 2: Stacked bar plot for total beers by category
+    axes[1].bar(range_grouped['avg_abv'], range_grouped['total_beers_neutral'], label='Neutral Beers', color='blue', alpha=0.7, width=0.5)
+    axes[1].bar(
+        range_grouped['avg_abv'],
+        range_grouped['total_beers_controversial'],
+        bottom=range_grouped['total_beers_neutral'],
+        label='Controversial Beers',
+        color='red',
+        alpha=0.7,
+        width=0.5
+    )
+    axes[1].bar(
+        range_grouped['avg_abv'],
+        range_grouped['total_beers_universal'],
+        bottom=range_grouped['total_beers_neutral'] + range_grouped['total_beers_controversial'],
+        label='Universal Beers',
+        color='green',
+        alpha=0.7,
+        width=0.5
+    )
+
+    axes[1].set_xlabel("ABV (Average)")
+    axes[1].set_ylabel("Total Beers")
+    axes[1].set_title("Total Beers by Category and ABV (Stacked)")
+    axes[1].legend()
+    axes[1].grid()
+
+    # Set x-axis limits
+    axes[0].set_xlim(0, 12)
+    axes[1].set_xlim(0, 12)
+
+    plt.tight_layout()
+    plt.show()
+
+    # If we want to save or not the file as HTML format
+    if save:
+        html_path = "aabv_plot.html"
+        mpld3.save_html(fig, html_path)
+
+
+def plot_threes(range_grouped, save = False):
     '''
     Makes a plot of the abv range with th evarious statistics computed previously
 
@@ -85,23 +147,25 @@ def plot_three(range_grouped, save = False):
     fig, axes = plt.subplots(2, 1, figsize=(12, 10), sharex=True)
 
     #Subplot 1: Line plots for the frequencies
-    sns.lineplot(data=range_grouped, x='avg_abv', y='avg_frequency_neutral', marker='o', ax=axes[0], label='Neutral Frequency', color='blue')
-    sns.lineplot(data=range_grouped, x='avg_abv', y='avg_frequency_controversial', marker='o', ax=axes[0], label='Controversial Frequency', color='red')
-    sns.lineplot(data=range_grouped, x='avg_abv', y='avg_frequency_universal', marker='o', ax=axes[0], label='Universal Frequency', color='green')
+    tmp_plot = range_grouped[range_grouped['avg_abv']<12]
+    sns.lineplot(data=tmp_plot, x='avg_abv', y='avg_frequency_neutral', marker='o', ax=axes[0], label='Neutral Frequency', color='blue')
+    sns.lineplot(data=tmp_plot, x='avg_abv', y='avg_frequency_controversial', marker='o', ax=axes[0], label='Controversial Frequency', color='red')
+    sns.lineplot(data=tmp_plot, x='avg_abv', y='avg_frequency_universal', marker='o', ax=axes[0], label='Universal Frequency', color='green')
     axes[0].set_ylabel("Frequency")
     axes[0].set_title("Frequency of Label Matches by ABV")
     axes[0].legend()
     axes[0].grid()
+    #axes[0].set_xlim(0, 12)
 
 
     #Subplot 2: Stacked bar plot for total beers by category
-    x = range(len(range_grouped['avg_abv']))
-    axes[1].bar(x, range_grouped['total_beers_neutral'], label='Neutral Beers', color='blue', alpha=0.7)
-    axes[1].bar(x, range_grouped['total_beers_controversial'], bottom=range_grouped['total_beers_neutral'], label='Controversial Beers', color='red', alpha=0.7)
+    x = range(len(tmp_plot))
+    axes[1].bar(x, tmp_plot['total_beers_neutral'], label='Neutral Beers', color='blue', alpha=0.7)
+    axes[1].bar(x, tmp_plot['total_beers_controversial'], bottom=tmp_plot['total_beers_neutral'], label='Controversial Beers', color='red', alpha=0.7)
     axes[1].bar(
         x,
-        range_grouped['total_beers_universal'],
-        bottom=range_grouped['total_beers_neutral'] + range_grouped['total_beers_controversial'],
+        tmp_plot['total_beers_universal'],
+        bottom=tmp_plot['total_beers_neutral'] + tmp_plot['total_beers_controversial'],
         label='Universal Beers',
         color='green',
         alpha=0.7,
@@ -111,14 +175,15 @@ def plot_three(range_grouped, save = False):
     axes[1].set_ylabel("Total Beers")
     axes[1].set_title("Total Beers by Category and ABV (Stacked)")
     #axes[1].set_yscale("log")  # if want to set y-axis to log scale
+    #axes[1].set_xlim(0, 12)
     axes[1].legend()
     axes[1].grid()
 
     #Add x-axis labels for avg_abv
-    step = max(1, int(len(range_grouped) // 10))
-    x_ticks = range(0, len(range_grouped), step)
+    step = max(1, int(len(tmp_plot) // 10))
+    x_ticks = range(0, len(tmp_plot), step)
     axes[1].set_xticks(x_ticks)
-    axes[1].set_xticklabels([f"{round(val, 2)}" for val in range_grouped['avg_abv'][::step]])
+    axes[1].set_xticklabels([f"{round(val, 2)}" for val in tmp_plot['avg_abv'][::step]])
 
     plt.tight_layout()
     plt.show()
