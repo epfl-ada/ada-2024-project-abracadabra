@@ -90,8 +90,8 @@ def plot_three(range_grouped, save=False):
     sns.lineplot(data=range_grouped, x='avg_abv', y='avg_frequency_neutral', marker='o', ax=axes[0], label='Neutral Frequency', color='blue')
     sns.lineplot(data=range_grouped, x='avg_abv', y='avg_frequency_controversial', marker='o', ax=axes[0], label='Controversial Frequency', color='red')
     sns.lineplot(data=range_grouped, x='avg_abv', y='avg_frequency_universal', marker='o', ax=axes[0], label='Universal Frequency', color='green')
-    axes[0].set_ylabel("Frequency")
-    axes[0].set_title("Frequency of Label Matches by ABV")
+    axes[0].set_ylabel("Proportion")
+    axes[0].set_title("Proportion of Label Matches by ABV")
     axes[0].legend()
     axes[0].grid()
 
