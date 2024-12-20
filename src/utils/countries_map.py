@@ -82,6 +82,7 @@ def draw_map(countries_Beers_labelled,title, column_for_plot = 'frequency', min_
     if min_ == -1:
         world.plot(column=column_for_plot, cmap='coolwarm', legend=True,legend_kwds={'label': label},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax, vmin = min_,vmax = 1)
     ax.set_title(title, fontsize=16)
+    ax.set_axis_off()
     plt.show()
 
     #Uncomment if want information about te countries missing or not matched

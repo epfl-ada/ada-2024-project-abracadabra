@@ -59,8 +59,8 @@ def plot_frequency_user_from_country_label(beers_df,users_df, ratings_df, labels
     users_nbr_labeled_ratings['frequency'] = users_nbr_labeled_ratings.nbr_ratings_labelled_matched/users_nbr_labeled_ratings.nbr_ratings_total
 
     #Plot results
-    title = 'Frequency of the ratings of a ' + possible_labels[label_to_match] + ' beer by the users country of origin'
-    label = 'Frequency per country'
+    title = 'Proportion of the ratings of a ' + possible_labels[label_to_match] + ' beer by the users country of origin'
+    label = 'Proportion per country'
     draw_map(users_nbr_labeled_ratings[['location','frequency']],title = title, label = label)
     return users_df
 
