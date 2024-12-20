@@ -78,9 +78,9 @@ def draw_map(countries_Beers_labelled,title, column_for_plot = 'frequency', min_
     #2 cases: plot between 0 :1 and -1:1. 
     fig, ax = plt.subplots(1, 1, figsize=(15, 10))
     if min_ ==0:
-        world.plot(column=column_for_plot, cmap='OrRd', legend=True,legend_kwds={'label': label},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax, vmin = min_, vmax = 1)
+        world.plot(column=column_for_plot, cmap='OrRd', legend=True,legend_kwds={'shrink': 0.5, 'label': label},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax, vmin = min_, vmax = 1)
     if min_ == -1:
-        world.plot(column=column_for_plot, cmap='coolwarm', legend=True,legend_kwds={'label': label},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax, vmin = min_,vmax = 1)
+        world.plot(column=column_for_plot, cmap='coolwarm', legend=True,legend_kwds={'shrink': 0.5,'label': label},missing_kwds={'color': 'lightgrey', 'label': 'No Data'},ax=ax, vmin = min_,vmax = 1)
     ax.set_title(title, fontsize=16)
     ax.set_axis_off()
     plt.show()
