@@ -788,7 +788,6 @@ def plot_variance_evolution_batches_barplot(ratings_df, beers_df, attributes=('o
     - ratings_df: DataFrame containing the ratings
     - beers_df: DataFrame containing the beers
     - attributes: the attribute over which we compute the variance of the grade. Default: overall
-
     '''
     #Deep copy for security
     ratings_df = ratings_df[[attributes, 'id', 'id_beer']].copy(deep=True)
@@ -833,22 +832,30 @@ def plot_variance_evolution_batches_barplot(ratings_df, beers_df, attributes=('o
     del ratings_df, beers_df,batch_means
 
 def plot_attribute_variance_distrib_per_label(variances_df, labels, label_list=[1, 2, 0]):
+    '''
+    Plots the distribution of the variances of the main attributes for each class. 
+
+    Parameters :
+    - variances_df: DataFrame containing the variances of each attributes for each beer
+    - labels: class of each beer
+    - label_list: list to tell us which label corresponds to which class for the 1st GMM The list should give the label which corresponds to the following:[universal, neutral, controversial]
+    '''
+
     variances_df = variances_df.copy(deep=True)
     variances_df['labels'] = labels  # Apply labels
     class_name = ['Controversial', 'Universal', 'Neutral']
 
     fig, axes = plt.subplots(nrows=1, ncols=len(label_list), figsize=(16, 6), sharey=True)
     for i, label in enumerate(label_list):
+        # Group the beer (and variances) per class to plot their distribution
         variances_grouped = variances_df[variances_df.labels == label]
-        variances_grouped.drop(columns=['labels'], inplace=True)  # Drop the labels column for plotting
 
         # Create a boxplot for each attribute
-        sns.boxplot(variances_grouped, ax=axes[i], )
-        #variances_grouped.boxplot(ax=axes[i])
-        axes[i].set_title(f"Label : {class_name[label]}")
+        sns.boxplot(variances_grouped[['appearance', 'aroma', 'palate', 'taste', 'overall']], ax=axes[i])
+        axes[i].set_title(f"{class_name[label]} class")
         axes[i].set_xlabel("Attributes")
         axes[i].set_ylabel("Variance" if i == 0 else '')  # Show ylabel only for the first subplot
-        axes[i].grid(visible=True, which='major', linestyle='--')
+        axes[i].grid(visible=True, which='major', linestyle='--')  # Show the grid
     
     plt.suptitle("Distribution of variances of the attributes for each class")
     plt.tight_layout()
