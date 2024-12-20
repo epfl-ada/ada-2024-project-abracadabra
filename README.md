@@ -1,5 +1,7 @@
 # The hidden aspects of controversial and universal beers
 
+Data Story : https://matt762.github.io/abracadabra/
+
 ## Abstract
 
 Some beers provoke strong and diverse opinions, while others receive more consistent feedback. This project aims to identify the factors driving such variance, focusing on “controversial” beers, those with high rating variability, and “universal” beers with more uniform reviews. This study uses quantitative ratings and textual analysis to examine how attributes like aroma, appearance, palate, and taste impact the controversiality. Additionally, we evaluate the effect of analyzing sentiments within reviews and the addition of data it provides. Furthermore, we explore beer parameters to evaluate their link with the variation of the reviews. Beyond the beers, we explore regional patterns and compare the user's number of ratings done, to understand who contributes most to each class. By uncovering these insights, the study aims to explain why a beer may be widely appealing or divisive.
